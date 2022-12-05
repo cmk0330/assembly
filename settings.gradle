@@ -1,0 +1,6 @@
+
+rootProject.name = "assembly"
+include ':app'
+include ':core'
+include ':business'
+include ':call'

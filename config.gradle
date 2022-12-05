@@ -1,0 +1,34 @@
+ext {
+    lifecycleDes = { extension ->
+        def lifecycle_version = "2.4.1"
+        def arch_version = "2.1.0"
+        extension.api "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
+        extension.api "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
+        extension.api "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version"
+        extension.api "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version"
+        extension.kapt "androidx.lifecycle:lifecycle-compiler:$lifecycle_version"
+        extension.api "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version"
+        extension.api "androidx.lifecycle:lifecycle-service:$lifecycle_version"
+        extension.api "androidx.lifecycle:lifecycle-process:$lifecycle_version"
+        extension.api "androidx.lifecycle:lifecycle-reactivestreams-ktx:$lifecycle_version"
+        extension.testImplementation "androidx.arch.core:core-testing:$arch_version"
+        extension.api "com.squareup.okhttp3:okhttp:4.7.2"
+    }
+
+//    lifecycle_des = [
+//            "viewmodel"           : "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version",
+//            "livedata"            : "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version",
+//            "runtime"             : "androidx.lifecycle:lifecycle-runtime-ktx:$lifecycle_version",
+//            "viewmodel_savedstate": "androidx.lifecycle:lifecycle-viewmodel-savedstate:$lifecycle_version",
+//            "compiler"            : "androidx.lifecycle:lifecycle-compiler:$lifecycle_version",
+//            "common"              : "androidx.lifecycle:lifecycle-common-java8:$lifecycle_version",
+//            "service"             : "androidx.lifecycle:lifecycle-service:$lifecycle_version",
+//            "process"             : "androidx.lifecycle:lifecycle-process:$lifecycle_version",
+//            "reactivestreams"     : "androidx.lifecycle:lifecycle-reactivestreams-ktx:$lifecycle_version",
+//    ]
+//
+//    okhttp_des = [
+//            "okhttp-logging": "com.squareup.okhttp3:logging-interceptor:4.7.2",
+//            "okhttp"        : "com.squareup.okhttp3:okhttp:4.7.2"
+//    ]
+}
