@@ -17,11 +17,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        ARouter.getInstance().inject(this)
-        findViewById<TextView>(R.id.text).setOnClickListener {
-            ARouter.getInstance().build(RouterPath.BUSINESS)
-                .withString("key", "11111")
-                .withString("key1", "222222")
+        val textView = findViewById<TextView>(R.id.text)
+        textView.setOnClickListener {
+            ARouter.getInstance().build("/ui/")
                 .navigation()
         }
     }

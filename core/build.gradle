@@ -1,12 +1,12 @@
 apply from: "${rootProject.rootDir}/config.gradle"
-apply plugin: 'org.jetbrains.kotlin.android'
-apply plugin: 'kotlin-kapt'
+
 if (coreIsModule.toBoolean()) {
     apply plugin: 'com.android.library'
 } else {
     apply plugin: 'com.android.application'
 }
-
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'kotlin-kapt'
 
 
 android {
@@ -59,7 +59,7 @@ android {
     }
 }
 
-dependencies { d->
+dependencies { d ->
     project.ext.lifecycleDes(d)
     api 'androidx.core:core-ktx:1.7.0'
     api 'androidx.appcompat:appcompat:1.4.1'

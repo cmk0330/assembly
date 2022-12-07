@@ -1,10 +1,10 @@
-apply plugin: 'org.jetbrains.kotlin.android'
-apply plugin: 'kotlin-kapt'
 if (appIsModule.toBoolean()) {
     apply plugin: 'com.android.library'
 } else {
     apply plugin: 'com.android.application'
 }
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'kotlin-kapt'
 
 android {
     namespace 'com.cmk.assembly'

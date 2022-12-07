@@ -13,6 +13,9 @@ ext {
         extension.api "androidx.lifecycle:lifecycle-reactivestreams-ktx:$lifecycle_version"
         extension.testImplementation "androidx.arch.core:core-testing:$arch_version"
         extension.api "com.squareup.okhttp3:okhttp:4.7.2"
+        def activity_version = "1.4.0"
+        extension.api "androidx.fragment:fragment-ktx:$activity_version"
+        extension.api "androidx.activity:activity-ktx:$activity_version"
     }
 
 //    lifecycle_des = [
