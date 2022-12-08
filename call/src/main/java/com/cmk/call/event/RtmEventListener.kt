@@ -5,7 +5,7 @@ import io.agora.rtm.RemoteInvitation
 import io.agora.rtm.RtmChannelMember
 import io.agora.rtm.RtmMessage
 
-interface RtmEvent {
+interface RtmEventListener {
     fun onConnectionStateChanged(state: Int, reason: Int) {}
     fun onMessageReceived(rtmMessage: RtmMessage?, uid: String?) {}
     fun onPeersOnlineStatusChanged(map: MutableMap<String, Int>?) {}
