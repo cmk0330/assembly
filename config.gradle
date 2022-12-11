@@ -16,6 +16,7 @@ ext {
         def activity_version = "1.4.0"
         extension.api "androidx.fragment:fragment-ktx:$activity_version"
         extension.api "androidx.activity:activity-ktx:$activity_version"
+        extension.api 'com.github.bumptech.glide:glide:4.11.0'
     }
 
 //    lifecycle_des = [
