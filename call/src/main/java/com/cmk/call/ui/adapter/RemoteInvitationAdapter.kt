@@ -4,9 +4,11 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.cmk.call.R
 import io.agora.rtm.RemoteInvitation
+import org.json.JSONObject
 
 class RemoteInvitationAdapter : RecyclerView.Adapter<RemoteInvitationAdapter.RemoteInvitationVH>() {
 
@@ -21,6 +23,9 @@ class RemoteInvitationAdapter : RecyclerView.Adapter<RemoteInvitationAdapter.Rem
     }
 
     override fun onBindViewHolder(holder: RemoteInvitationVH, position: Int) {
+        val item = dataList.get(position)
+        val callerName = JSONObject(item.content).getString("UserName")
+        holder.tvCallername.text = callerName
         holder.ivAccept.setOnClickListener {
             onAcceptListener?.invoke(dataList[position])
         }
@@ -37,16 +42,19 @@ class RemoteInvitationAdapter : RecyclerView.Adapter<RemoteInvitationAdapter.Rem
         notifyDataSetChanged()
     }
 
-    fun onAcceptListener(listener: (RemoteInvitation?) -> Unit) {
+    fun getCurrentList() = dataList
+
+    fun setOnAcceptListener(listener: (RemoteInvitation?) -> Unit) {
         this.onAcceptListener = listener
     }
 
-    fun onRefuseListener(listener: (RemoteInvitation?) -> Unit) {
+    fun setOnRefuseListener(listener: (RemoteInvitation?) -> Unit) {
         this.onRefuseListener = listener
     }
 
     class RemoteInvitationVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivAccept: ImageView = itemView.findViewById(R.id.iv_receive_accept)
         val ivRefuse: ImageView = itemView.findViewById(R.id.iv_receive_refuse)
+        val tvCallername = itemView.findViewById<TextView>(R.id.tv_caller_user)
     }
 }

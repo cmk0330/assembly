@@ -6,12 +6,15 @@ import androidx.activity.viewModels
 import androidx.lifecycle.*
 import com.cmk.call.event.RtmEventListener
 import com.cmk.call.ext.shareViewModels
-import com.cmk.call.ui.P2PVideoActivity
+import com.cmk.call.ui.AnswerVideoActivity
 import com.cmk.call.viewmodel.CallViewModel
 import com.cmk.core.BaseActivity
 import com.cmk.core.BaseApp
+import com.cmk.core.ext.TAG
 import com.cmk.core.ext.loge
+import io.agora.rtm.LocalInvitation
 import io.agora.rtm.RemoteInvitation
+import io.agora.rtm.RtmMessage
 import kotlinx.coroutines.launch
 
 open class BaseCallActivity : BaseActivity(), RtmEventListener {
@@ -20,6 +23,10 @@ open class BaseCallActivity : BaseActivity(), RtmEventListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+    }
+
+    override fun onStart() {
+        super.onStart()
         callViewModel.register(this)
     }
 
@@ -27,7 +34,16 @@ open class BaseCallActivity : BaseActivity(), RtmEventListener {
      * 返回给被叫的回调：收到一条呼叫邀请
      */
     override fun onRemoteInvitationReceived(remoteInvitation: RemoteInvitation?) {
-        startActivity(Intent(this, P2PVideoActivity::class.java)
-            .putExtra("IsCaller", false))
+        startActivity(Intent(this, AnswerVideoActivity::class.java))
+    }
+
+    override fun onMessageReceived(rtmMessage: RtmMessage?, uid: String?) {
+        super.onMessageReceived(rtmMessage, uid)
+        "onMessageReceived".loge(TAG)
+    }
+
+    override fun onLocalInvitationAccepted(localInvitation: LocalInvitation?, var1: String?) {
+//        super.onLocalInvitationAccepted(localInvitation, var1)
+        "onLocalInvitationAccepted".loge("BaseActivity")
     }
 }

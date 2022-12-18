@@ -41,7 +41,17 @@
         app:layout_constraintTop_toBottomOf="@id/tv_user_name" />
 
     <ImageView
-        android:id="@+id/iv_receive_refuse"
+        android:id="@+id/iv_switch_audio"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="56dp"
+        android:src="@mipmap/ic_switch_audio"
+        app:layout_constraintBottom_toBottomOf="@id/iv_receive_refuse"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/iv_receive_refuse" />
+
+    <ImageView
+        android:id="@+id/iv_calling_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="56dp"
@@ -50,24 +60,5 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <ImageView
-        android:id="@+id/iv_receive_accept"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="64dp"
-        android:src="@mipmap/ic_accept"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/iv_receive_refuse"
-        app:layout_constraintStart_toEndOf="@id/iv_switch_audio" />
 
-    <ImageView
-        android:id="@+id/iv_switch_audio"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="56dp"
-        android:layout_marginBottom="64dp"
-        android:src="@mipmap/ic_switch_audio"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

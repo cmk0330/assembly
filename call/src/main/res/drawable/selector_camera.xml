@@ -1,0 +1,4 @@
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@mipmap/ic_switch_camera_pre" android:state_selected="true" />
+    <item android:drawable="@mipmap/ic_switch_camera" android:state_selected="false" />
+</selector>

@@ -38,7 +38,9 @@
                 android:value="" />
         </activity>
         <activity android:name=".ui.P2PVideoActivity" />
-        <activity android:name=".BaseCallActivity"/>
+        <activity android:name=".ui.CallingVideoActivity" />
+        <activity android:name=".ui.AnswerVideoActivity" />
+        <activity android:name=".BaseCallActivity" />
     </application>
 
 </manifest>

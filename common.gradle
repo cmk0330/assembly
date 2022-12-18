@@ -1,0 +1,9 @@
+ext {
+    commonDes = { extension ->
+        extension.api "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0" // 协程(版本自定)
+        extension.api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
+        extension.api 'com.github.liangjingkanji:Net:3.5.3'
+        extension.api "com.squareup.okhttp3:okhttp:4.7.2"
+        extension.api 'com.guolindev.permissionx:permissionx:1.5.0'
+    }
+}
