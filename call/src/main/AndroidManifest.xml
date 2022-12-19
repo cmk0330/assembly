@@ -19,6 +19,7 @@
     <application
         android:name=".App"
         android:allowBackup="true"
+        android:hardwareAccelerated="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -37,9 +38,12 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".ui.P2PVideoActivity" />
-        <activity android:name=".ui.CallingVideoActivity" />
-        <activity android:name=".ui.AnswerVideoActivity" />
+        <activity
+            android:name=".ui.CallingVideoActivity"
+            android:hardwareAccelerated="true" />
+        <activity
+            android:name=".ui.AnswerVideoActivity"
+            android:hardwareAccelerated="true"/>
         <activity android:name=".BaseCallActivity" />
     </application>
 

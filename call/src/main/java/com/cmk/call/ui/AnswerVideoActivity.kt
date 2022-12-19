@@ -1,14 +1,12 @@
 package com.cmk.call.ui
 
+import android.graphics.PixelFormat
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.SurfaceView
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
@@ -21,7 +19,6 @@ import com.cmk.call.viewmodel.RtcViewModel
 import com.cmk.core.ext.loge
 import io.agora.rtm.RemoteInvitation
 import io.agora.rtm.RtmMessage
-import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class AnswerVideoActivity : BaseCallActivity() {
@@ -36,8 +33,8 @@ class AnswerVideoActivity : BaseCallActivity() {
     private var calleeId = 0 // 被叫者id
     private var channelToken = ""
     private val videoMap = mutableMapOf<String, SurfaceView>()
-    private val LOCAL_KEY = "local_key"
-    private val REMOTE_KEY = "remote_key"
+    private val KEY_LOCAL = "local_key"
+    private val KEY_REMOTE = "remote_key"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +50,7 @@ class AnswerVideoActivity : BaseCallActivity() {
             tvCallState.text = "对方等待接听中"
             bindingAnswer.recyclerView.adapter = remoteAdapter
             remoteAdapter.submitList(callViewModel.remoteInvitationList.toMutableList())
+            if (callViewModel.remoteInvitationList.isEmpty()) return
             callViewModel.remoteInvitationList.first().let {
                 JSONObject(it.content).apply {
                     callMode = getInt("Mode")
@@ -127,50 +125,56 @@ class AnswerVideoActivity : BaseCallActivity() {
 
     private fun setupLocalVideo() {
         val surfaceView = SurfaceView(this)
-        videoMap[LOCAL_KEY] = surfaceView
+        videoMap[KEY_LOCAL] = surfaceView
         bindingVideo.apply {
-            flMinScreenVideo.tag = LOCAL_KEY
+            flMinScreenVideo.tag = KEY_LOCAL
             flMinScreenVideo.addView(surfaceView)
             rtcViewModel.setupLocalVideo(calleeId, surfaceView)
         }
+        setSurfaceViewLayer(true, surfaceView)
     }
 
     private fun setupRemoteVideo(remoteUid: Int) {
         val surfaceView = SurfaceView(this)
-        videoMap[REMOTE_KEY] = surfaceView
+        videoMap[KEY_REMOTE] = surfaceView
         bindingVideo.apply {
-            flFullScreenVideo.tag = REMOTE_KEY
+            flFullScreenVideo.tag = KEY_REMOTE
             flFullScreenVideo.addView(surfaceView)
             rtcViewModel.setupRemoveVideo(remoteUid, surfaceView)
         }
+        setSurfaceViewLayer(false, surfaceView)
     }
 
     /**
      * 本地画面与远程画面切换
      */
     private fun switchLocalRemoteVideo() {
-        if (bindingVideo.flMinScreenVideo.tag == LOCAL_KEY
-            && bindingVideo.flFullScreenVideo.tag == REMOTE_KEY
+        if (bindingVideo.flMinScreenVideo.tag == KEY_LOCAL
+            && bindingVideo.flFullScreenVideo.tag == KEY_REMOTE
         ) {
             bindingVideo.apply {
                 flMinScreenVideo.removeAllViews()
                 flFullScreenVideo.removeAllViews()
-                flMinScreenVideo.addView(videoMap[REMOTE_KEY])
-                flFullScreenVideo.addView(videoMap[LOCAL_KEY])
-                bindingVideo.flMinScreenVideo.tag = REMOTE_KEY
-                bindingVideo.flFullScreenVideo.tag = LOCAL_KEY
+                flMinScreenVideo.addView(videoMap[KEY_REMOTE])
+                flFullScreenVideo.addView(videoMap[KEY_LOCAL])
+                bindingVideo.flMinScreenVideo.tag = KEY_REMOTE
+                bindingVideo.flFullScreenVideo.tag = KEY_LOCAL
             }
-        } else if (bindingVideo.flMinScreenVideo.tag == REMOTE_KEY
-            && bindingVideo.flFullScreenVideo.tag == LOCAL_KEY
+            setSurfaceViewLayer(true, videoMap[KEY_REMOTE])
+            setSurfaceViewLayer(false, videoMap[KEY_LOCAL])
+        } else if (bindingVideo.flMinScreenVideo.tag == KEY_REMOTE
+            && bindingVideo.flFullScreenVideo.tag == KEY_LOCAL
         ) {
             bindingVideo.apply {
                 flMinScreenVideo.removeAllViews()
                 flFullScreenVideo.removeAllViews()
-                flMinScreenVideo.addView(videoMap[LOCAL_KEY])
-                flFullScreenVideo.addView(videoMap[REMOTE_KEY])
-                bindingVideo.flMinScreenVideo.tag = LOCAL_KEY
-                bindingVideo.flFullScreenVideo.tag = REMOTE_KEY
+                flMinScreenVideo.addView(videoMap[KEY_LOCAL])
+                flFullScreenVideo.addView(videoMap[KEY_REMOTE])
+                bindingVideo.flMinScreenVideo.tag = KEY_LOCAL
+                bindingVideo.flFullScreenVideo.tag = KEY_REMOTE
             }
+            setSurfaceViewLayer(true, videoMap[KEY_LOCAL])
+            setSurfaceViewLayer(false, videoMap[KEY_REMOTE])
         }
     }
 
@@ -221,5 +225,16 @@ class AnswerVideoActivity : BaseCallActivity() {
             stop()
             release()
         }
+    }
+
+    /**
+     * 解决两个surfaceView 覆盖的问题
+     */
+    private fun setSurfaceViewLayer(isOnTop: Boolean, surfaceView: SurfaceView?) {
+        val holder = surfaceView?.holder ?: return
+        holder.setKeepScreenOn(true)
+        holder.setFormat(PixelFormat.TRANSPARENT)
+        surfaceView.setZOrderOnTop(isOnTop)
+//        surfaceView.setZOrderMediaOverlay(true)
     }
 }

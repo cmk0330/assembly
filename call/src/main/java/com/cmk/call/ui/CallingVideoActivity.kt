@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.SurfaceView
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.lifecycle.observe
@@ -35,10 +36,10 @@ class CallingVideoActivity : BaseCallActivity() {
     private var intentData: IntentData? = null // 主动呼叫的用户数据
     private var callMode = 0 // 呼叫模式：0 视频 1 语音
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IABX8zkMG1pGP/EPGiaTyeUZdWtPTlHX+T9ZXg+D+k05+KPg45sAAAAAIgCErYiMtTOgYwQAAQC1M6BjAgC1M6BjAwC1M6BjBAC1M6Bj"
+        "006aaa58676e73f41a086237149d9da6bc4IAAytZ6pU1s3gOXwuzztyY2dYQRKqFv5jNzpzbQeLOUv9aPg45sAAAAAEACFEd6ky1ShYwEA6APLVKFj"
     private val videoMap = mutableMapOf<String, SurfaceView>()
-    private val LOCAL_KEY = "local_key"
-    private val REMOTE_KEY = "remote_key"
+    private val KEY_LOCAL = "local_key"
+    private val KEY_REMOTE = "remote_key"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +58,6 @@ class CallingVideoActivity : BaseCallActivity() {
             tvUserName.text = intentData?.callerName
             rtcViewModel.initRtc(this@CallingVideoActivity, callMode)
             callViewModel.sendLocalInvitation(intentData?.callerId?.toString())
-
             ivCallingCancel.setOnClickListener {
                 callViewModel.cancelLocalInvitation()
                 finish()
@@ -121,52 +121,62 @@ class CallingVideoActivity : BaseCallActivity() {
 
     private fun setupLocalVideo() {
         val surfaceView = SurfaceView(this)
-        videoMap[LOCAL_KEY] = surfaceView
+        videoMap[KEY_LOCAL] = surfaceView
         bindingVideo.apply {
-            flMinScreenVideo.tag = LOCAL_KEY
+            flMinScreenVideo.tag = KEY_LOCAL
             flMinScreenVideo.addView(surfaceView)
             rtcViewModel.setupLocalVideo(1234, surfaceView)
         }
-        setSurfaceViewLayer(surfaceView)
+        setSurfaceViewLayer(true, surfaceView)
+        if (bindingVideo.dragLayout.lastLeft != -1) {
+            val marginLayoutParams = bindingVideo.flMinScreenVideo.layoutParams as ViewGroup.MarginLayoutParams
+            marginLayoutParams.leftMargin = bindingVideo.dragLayout.lastLeft
+            marginLayoutParams.topMargin = bindingVideo.dragLayout.lastTop
+            bindingVideo.flMinScreenVideo.layoutParams = marginLayoutParams
+        }
     }
 
     private fun setupRemoteVideo(remoteUid: Int) {
         val surfaceView = SurfaceView(this)
-        videoMap[REMOTE_KEY] = surfaceView
+        videoMap[KEY_REMOTE] = surfaceView
         bindingVideo.apply {
-            flFullScreenVideo.tag = REMOTE_KEY
+            flFullScreenVideo.tag = KEY_REMOTE
             flFullScreenVideo.addView(surfaceView) // 默认第一次时远程画面满屏
             rtcViewModel.setupRemoveVideo(remoteUid, surfaceView)
         }
+        setSurfaceViewLayer(false, surfaceView)
     }
 
     /**
      * 本地画面与远程画面切换
      */
     private fun switchLocalRemoteVideo() {
-        if (bindingVideo.flMinScreenVideo.tag == LOCAL_KEY
-            && bindingVideo.flFullScreenVideo.tag == REMOTE_KEY
+        if (bindingVideo.flMinScreenVideo.tag == KEY_LOCAL
+            && bindingVideo.flFullScreenVideo.tag == KEY_REMOTE
         ) {
             bindingVideo.apply {
                 flMinScreenVideo.removeAllViews()
                 flFullScreenVideo.removeAllViews()
-                flMinScreenVideo.addView(videoMap[REMOTE_KEY])
-                flFullScreenVideo.addView(videoMap[LOCAL_KEY])
-                bindingVideo.flMinScreenVideo.tag = REMOTE_KEY
-                bindingVideo.flFullScreenVideo.tag = LOCAL_KEY
+                flMinScreenVideo.addView(videoMap[KEY_REMOTE])
+                flFullScreenVideo.addView(videoMap[KEY_LOCAL])
+                bindingVideo.flMinScreenVideo.tag = KEY_REMOTE
+                bindingVideo.flFullScreenVideo.tag = KEY_LOCAL
             }
-            setSurfaceViewLayer(videoMap[REMOTE_KEY])
-        } else if (bindingVideo.flMinScreenVideo.tag == REMOTE_KEY
-            && bindingVideo.flFullScreenVideo.tag == LOCAL_KEY
+            setSurfaceViewLayer(true, videoMap[KEY_REMOTE])
+            setSurfaceViewLayer(false, videoMap[KEY_LOCAL])
+        } else if (bindingVideo.flMinScreenVideo.tag == KEY_REMOTE
+            && bindingVideo.flFullScreenVideo.tag == KEY_LOCAL
         ) {
             bindingVideo.apply {
                 flMinScreenVideo.removeAllViews()
                 flFullScreenVideo.removeAllViews()
-                flMinScreenVideo.addView(videoMap[LOCAL_KEY])
-                flFullScreenVideo.addView(videoMap[REMOTE_KEY])
-                bindingVideo.flMinScreenVideo.tag = LOCAL_KEY
-                bindingVideo.flFullScreenVideo.tag = REMOTE_KEY
+                flMinScreenVideo.addView(videoMap[KEY_LOCAL])
+                flFullScreenVideo.addView(videoMap[KEY_REMOTE])
+                bindingVideo.flMinScreenVideo.tag = KEY_LOCAL
+                bindingVideo.flFullScreenVideo.tag = KEY_REMOTE
             }
+            setSurfaceViewLayer(true, videoMap[KEY_LOCAL])
+            setSurfaceViewLayer(false, videoMap[KEY_REMOTE])
         }
     }
 
@@ -224,11 +234,15 @@ class CallingVideoActivity : BaseCallActivity() {
     /**
      * 解决两个surfaceView 覆盖的问题
      */
-    private fun setSurfaceViewLayer(surfaceView: SurfaceView) {
-        val holder = surfaceView.holder ?: return
+    private fun setSurfaceViewLayer(isOnTop: Boolean, surfaceView: SurfaceView?) {
+        val holder = surfaceView?.holder ?: return
         holder.setKeepScreenOn(true)
         holder.setFormat(PixelFormat.TRANSPARENT)
-        surfaceView.setZOrderOnTop(true)
-        surfaceView.setZOrderMediaOverlay(true)
+        surfaceView.setZOrderOnTop(isOnTop)
+//        surfaceView.setZOrderMediaOverlay(true)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
     }
 }

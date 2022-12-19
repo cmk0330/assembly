@@ -51,7 +51,7 @@ class P2PActivity : BaseCallActivity() {
 
         binding.btnLogin.setOnClickListener {
             lifecycleScope.launch {
-                if (callViewModel.login(token1, userId1)) {
+                if (callViewModel.login(token, userId)) {
                     "声网登录成功".loge()
                 } else {
                     "声网登录失败".loge()
