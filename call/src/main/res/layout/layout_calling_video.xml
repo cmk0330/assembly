@@ -45,10 +45,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="56dp"
-        android:src="@mipmap/ic_switch_audio"
-        app:layout_constraintBottom_toBottomOf="@id/iv_receive_refuse"
+        android:src="@drawable/ic_mic"
+        app:layout_constraintBottom_toBottomOf="@id/iv_calling_cancel"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/iv_receive_refuse" />
+        app:layout_constraintTop_toTopOf="@id/iv_calling_cancel" />
 
     <ImageView
         android:id="@+id/iv_calling_cancel"
@@ -56,9 +56,8 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="56dp"
         android:layout_marginBottom="64dp"
-        android:src="@mipmap/ic_hang_up"
+        android:src="@drawable/ic_call_end"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

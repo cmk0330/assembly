@@ -6,6 +6,9 @@ import android.view.SurfaceView
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import com.bumptech.glide.Glide
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
@@ -18,10 +21,11 @@ import com.cmk.call.viewmodel.RtcViewModel
 import com.cmk.core.ext.loge
 import io.agora.rtm.RemoteInvitation
 import io.agora.rtm.RtmMessage
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 
 class AnswerVideoActivity : BaseCallActivity() {
-    private val TAG = "RemoteVideoActivity"
+    private val TAG = "AnswerVideoActivity"
     private val binding by lazy { ActivityP2pVideoBinding.inflate(layoutInflater) }
     private val bindingAnswer by lazy { LayoutAnswerVideoBinding.inflate(layoutInflater) }
     private val bindingVideo by lazy { LayoutVideoBinding.inflate(layoutInflater) }
@@ -31,6 +35,9 @@ class AnswerVideoActivity : BaseCallActivity() {
     private var callMode = 0 // 呼叫模式：0 视频 1 语音
     private var calleeId = 0 // 被叫者id
     private var channelToken = ""
+    private val videoMap = mutableMapOf<String, SurfaceView>()
+    private val LOCAL_KEY = "local_key"
+    private val REMOTE_KEY = "remote_key"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,11 +85,13 @@ class AnswerVideoActivity : BaseCallActivity() {
      * 远端发送的消息回调
      */
     override fun onMessageReceived(rtmMessage: RtmMessage?, uid: String?) {
+        "onMessageReceived".loge(TAG)
         rtmMessage?.text?.let {
             if (JSONObject(it).has(Constant.MESSAGE_TYPE)) {
                 when (JSONObject(it).get(Constant.MESSAGE_TYPE)) {
                     Constant.END_CALL -> {
-                        Toast.makeText(this@AnswerVideoActivity, "对方已挂断", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@AnswerVideoActivity, "对方已挂断", Toast.LENGTH_SHORT)
+                            .show()
                         leave(false)
                     }
                 }
@@ -109,15 +118,18 @@ class AnswerVideoActivity : BaseCallActivity() {
         )
         stopRing()
         bindingVideo.apply {
-            ivHangUp.setOnClickListener {
-                leave(true)
-            }
+            ivHangUp.setOnClickListener { leave(true) }
+            ivSwitchCamera.setOnClickListener { rtcViewModel.switchCamera() }
+            flMinScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
+            flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
         }
     }
 
     private fun setupLocalVideo() {
         val surfaceView = SurfaceView(this)
+        videoMap[LOCAL_KEY] = surfaceView
         bindingVideo.apply {
+            flMinScreenVideo.tag = LOCAL_KEY
             flMinScreenVideo.addView(surfaceView)
             rtcViewModel.setupLocalVideo(calleeId, surfaceView)
         }
@@ -125,9 +137,40 @@ class AnswerVideoActivity : BaseCallActivity() {
 
     private fun setupRemoteVideo(remoteUid: Int) {
         val surfaceView = SurfaceView(this)
+        videoMap[REMOTE_KEY] = surfaceView
         bindingVideo.apply {
+            flFullScreenVideo.tag = REMOTE_KEY
             flFullScreenVideo.addView(surfaceView)
             rtcViewModel.setupRemoveVideo(remoteUid, surfaceView)
+        }
+    }
+
+    /**
+     * 本地画面与远程画面切换
+     */
+    private fun switchLocalRemoteVideo() {
+        if (bindingVideo.flMinScreenVideo.tag == LOCAL_KEY
+            && bindingVideo.flFullScreenVideo.tag == REMOTE_KEY
+        ) {
+            bindingVideo.apply {
+                flMinScreenVideo.removeAllViews()
+                flFullScreenVideo.removeAllViews()
+                flMinScreenVideo.addView(videoMap[REMOTE_KEY])
+                flFullScreenVideo.addView(videoMap[LOCAL_KEY])
+                bindingVideo.flMinScreenVideo.tag = REMOTE_KEY
+                bindingVideo.flFullScreenVideo.tag = LOCAL_KEY
+            }
+        } else if (bindingVideo.flMinScreenVideo.tag == REMOTE_KEY
+            && bindingVideo.flFullScreenVideo.tag == LOCAL_KEY
+        ) {
+            bindingVideo.apply {
+                flMinScreenVideo.removeAllViews()
+                flFullScreenVideo.removeAllViews()
+                flMinScreenVideo.addView(videoMap[LOCAL_KEY])
+                flFullScreenVideo.addView(videoMap[REMOTE_KEY])
+                bindingVideo.flMinScreenVideo.tag = LOCAL_KEY
+                bindingVideo.flFullScreenVideo.tag = REMOTE_KEY
+            }
         }
     }
 
@@ -146,6 +189,7 @@ class AnswerVideoActivity : BaseCallActivity() {
      * isInitiative: 是否是主动离开
      */
     private fun leave(isInitiative: Boolean) {
+        if (isFinishing) return
         if (!isInitiative) {
             finish()
             return
