@@ -45,6 +45,7 @@
             android:name=".ui.AnswerVideoActivity"
             android:hardwareAccelerated="true"/>
         <activity android:name=".BaseCallActivity" />
+        <activity android:name=".ui.MeetingCallingVideoActivity"/>
     </application>
 
 </manifest>

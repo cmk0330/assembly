@@ -8,4 +8,6 @@ object Constant {
 
     const val MESSAGE_TYPE = "MESSAGE_TYPE"
     const val END_CALL = 1
+    const val CALL_STATE_WAITING = 2
+    const val CALL_STATE_RECEIVE = 3
 }

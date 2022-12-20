@@ -1,22 +1,15 @@
 package com.cmk.call.ui
 
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
-import androidx.core.app.ActivityOptionsCompat
-import androidx.core.util.Pair
-import androidx.core.view.ViewCompat
 import androidx.lifecycle.lifecycleScope
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
 import com.cmk.call.IntentData
 import com.cmk.call.databinding.ActivityP2pBinding
-import com.cmk.core.BaseActivity
 import com.cmk.core.ext.loge
 import com.permissionx.guolindev.PermissionX
-import io.agora.rtm.RemoteInvitation
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class P2PActivity : BaseCallActivity() {
@@ -28,10 +21,10 @@ class P2PActivity : BaseCallActivity() {
     private val binding by lazy { ActivityP2pBinding.inflate(layoutInflater) }
 
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IAAytZ6pU1s3gOXwuzztyY2dYQRKqFv5jNzpzbQeLOUv9aPg45sAAAAAEACFEd6ky1ShYwEA6APLVKFj"
+        "006aaa58676e73f41a086237149d9da6bc4IAAUEYrnEIW5E7FW05YftEA30rB+k/gvUcUF86CRmOGCJqPg45sAAAAAEAC1T1eSSW2iYwEA6ANJbaJj"
     private val userId = "1234"
     private val token1 =
-        "006aaa58676e73f41a086237149d9da6bc4IACp6UQEaF50w7tYYQSAUfu1D7DvBeLtcUJCA9IqkNyPNgdWUn4AAAAAEACG0Qzu8VShYwEA6APxVKFj"
+        "006aaa58676e73f41a086237149d9da6bc4IACGOwoCMxrtOWLKVcZkwh9BTnspykAoG78mFJiKws//4QdWUn4AAAAAEAB523awKW2iYwEA6AMpbaJj"
     private val userId1 = "5678"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,6 +42,10 @@ class P2PActivity : BaseCallActivity() {
                 }
             }
 
+        binding.btnMeeting.setOnClickListener {
+            startActivity(Intent(this, MeetingCallingVideoActivity::class.java))
+        }
+
         binding.btnLogin.setOnClickListener {
             lifecycleScope.launch {
                 if (callViewModel.login(token, userId)) {
@@ -59,25 +56,26 @@ class P2PActivity : BaseCallActivity() {
             }
         }
         binding.tvCreateLocal.setOnClickListener {
-            callViewModel.createLocalInvitation(
-                calleeId = userId1,
-                callerId = userId,
-                channelToken = token,
-                Constant.VIDEO_MODE,
-                "abcd",
-                "123123123",
-                "小小"
-            ) {
-                startActivity(Intent(this, CallingVideoActivity::class.java).apply {
-                    putExtra("IsCaller", true) // 是否主动呼叫
-                    putExtra("CallerId", "") // 呼叫者id
-//                    putExtra("CallerAvatar", "") // 呼叫者头像
-//                    putExtra("CallerName", "") // 呼叫着名称
-                    val data = IntentData(callerId = 1234, calleeId = 5678)
-                    val bundle = Bundle()
-                    bundle.putParcelable("intent_data", data)
-                    putExtras(bundle)
-                })
+            callViewModel.queryOnline(userId1) {
+                if (!it) {
+                    Toast.makeText(this@P2PActivity, "对方不在线", Toast.LENGTH_SHORT).show()
+                    return@queryOnline
+                }
+                callViewModel.createLocalInvitation(
+                    calleeId = userId1,
+                    callerId = userId,
+                    channelToken = token,
+                    Constant.VIDEO_MODE,
+                    "123123123",
+                    "小小"
+                ) {
+                    startActivity(Intent(this, CallingVideoActivity::class.java).apply {
+                        val data = IntentData(callerId = 1234, calleeId = 5678)
+                        val bundle = Bundle()
+                        bundle.putParcelable("intent_data", data)
+                        putExtras(bundle)
+                    })
+                }
             }
         }
     }

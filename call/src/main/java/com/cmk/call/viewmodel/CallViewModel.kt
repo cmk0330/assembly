@@ -110,16 +110,20 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
             HashSet<String>().apply { add(peerId) },
             object : ResultCallback<MutableMap<String, Boolean>> {
                 override fun onSuccess(map: MutableMap<String, Boolean>?) {
-                    map?.let {
-                        if (it.contains(peerId) && it[peerId]!!)
-                            block.invoke(true)
-                        else
-                            block.invoke(false)
+                    viewModelScope.launch {
+                        map?.let {
+                            if (it.contains(peerId) && it[peerId]!!)
+                                block.invoke(true)
+                            else
+                                block.invoke(false)
+                        }
                     }
                 }
 
                 override fun onFailure(p0: ErrorInfo?) {
-
+                    viewModelScope.launch {
+                        block.invoke(false)
+                    }
                 }
             })
     }
@@ -149,7 +153,6 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
         callerId: String, // 呼叫者id
         channelToken: String, // 呼叫者token
         mode: Int,
-        channelId: String,
         callerAvatar: String,
         callerName: String,
         block: (() -> Unit)? = null
@@ -163,7 +166,6 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
                 put("CallerId", callerId)
                 put("Avatar", callerAvatar)
                 put("UserName", callerName)
-                put("ChannelId", channelId) // 频道id
 
             }.toString()
         }
@@ -271,7 +273,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
     /**
      * 发送点对点消息
      */
-    fun sendMessage(userId: String, msg: String, block: (Boolean) -> Unit) {
+    fun sendMessage(userId: String?, msg: String, block: ((Boolean) -> Unit)? = null) {
         rtmClient.sendMessageToPeer(
             userId,
             rtmClient.createMessage(msg),
@@ -279,13 +281,13 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
             object : ResultCallback<Void> {
                 override fun onSuccess(var1: Void?) {
                     viewModelScope.launch {
-                        block.invoke(true)
+                        block?.invoke(true)
                     }
                 }
 
                 override fun onFailure(var1: ErrorInfo?) {
                     viewModelScope.launch {
-                        block.invoke(false)
+                        block?.invoke(false)
                     }
                 }
             })

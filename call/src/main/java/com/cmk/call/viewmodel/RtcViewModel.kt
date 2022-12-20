@@ -1,6 +1,7 @@
 package com.cmk.call.viewmodel
 
 import android.content.Context
+import android.util.Log
 import android.view.SurfaceView
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -24,21 +25,12 @@ import kotlin.properties.Delegates
 class RtcViewModel : ViewModel() {
     private val TAG = "RtcViewModel"
     private var rtcEngine: RtcEngine? = null
-    private val userOfflineInterval by lazy { //收到对方异常离开 倒计10秒 10秒内对方还未恢复 则退出
-        Interval(
-            10,
-            1,
-            TimeUnit.SECONDS,
-            1
-        )
-    }
     private var haveMemberJoin = false //是否有人加入？用来判断 加入频道后 对方可能因为某些原因 15秒内都未能加入通话 则退出本次通话
-
     val joinChannelState = MutableLiveData<Int>()
     val remoteUserOffline = MutableLiveData<Pair<Int, Int>>()
     val remoteUserJoin = MutableLiveData<Int>()
     val remoteVideoState = MutableLiveData<Pair<Int, Int>>()
-    val remoteVideoDecode = MutableLiveData<Int>()
+    val remoteVideoDecode = MutableLiveData<Pair<Int, Int>>()
 
     fun initRtc(context: Context, callType: Int) {
         rtcEngine = RtcEngine.create(context, BuildConfig.AGORA_APPID, IRtcEngineEventHandlerImpl())
@@ -158,7 +150,7 @@ class RtcViewModel : ViewModel() {
          */
         override fun onFirstRemoteVideoFrame(uid: Int, width: Int, height: Int, elapsed: Int) {
             super.onFirstRemoteVideoFrame(uid, width, height, elapsed)
-            remoteVideoDecode.postValue(uid)
+            remoteVideoDecode.postValue(Pair(uid, -1))
             "onFirstRemoteVideoFrame$uid".loge(TAG)
         }
 
@@ -187,15 +179,12 @@ class RtcViewModel : ViewModel() {
             super.onRemoteVideoStateChanged(uid, state, reason, elapsed)
             "onRemoteVideoStateChanged$state".loge(TAG)
             "onRemoteVideoStateChanged$reason".loge(TAG)
-            if (reason == Constants.REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED ||
-                reason == Constants.REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED
-            ) {
-                remoteVideoState.postValue(Pair(uid, reason))
-                "onRemoteVideoStateChanged$uid".loge(TAG)
-            }
-            if (state == Constants.REMOTE_VIDEO_STATE_STARTING) {
-                remoteVideoDecode.postValue(uid)
-            }
+            remoteVideoState.postValue(Pair(uid, state))
+//            if (reason == Constants.REMOTE_VIDEO_STATE_REASON_REMOTE_UNMUTED ||
+//                reason == Constants.REMOTE_VIDEO_STATE_REASON_REMOTE_MUTED
+//            ) {
+//                remoteVideoState.postValue(Pair(uid, reason))
+//            }
         }
 
         /**
@@ -211,27 +200,39 @@ class RtcViewModel : ViewModel() {
         override fun onUserJoined(uid: Int, elapsed: Int) {
             super.onUserJoined(uid, elapsed)
             remoteUserJoin.postValue(uid)
-            haveMemberJoin = true
-            userOfflineInterval.cancel()
             "onUserJoined:$uid".loge(TAG)
         }
 
         /**
          * 远端用户（通信场景）/主播（直播场景）离开当前频道回调。
+         * 0:用户主动离开
+         * 1:因过长时间收不到对方数据包，SDK 判定该远端用户超时掉线
+         * 2:用户的角色从主播切换为观众
          */
         override fun onUserOffline(uid: Int, reason: Int) {
             super.onUserOffline(uid, reason)
-            // 0:用户主动离开
-            // 1:因过长时间收不到对方数据包，SDK 判定该远端用户超时掉线
-            // 2:用户的角色从主播切换为观众
             remoteUserOffline.postValue(Pair(uid, reason))
-            if (reason == Constants.USER_OFFLINE_DROPPED) {
-                userOfflineInterval.finish {
-                    if (it == 15L) //异常 则继续等待15秒 15秒内它还未恢复（恢复会走onUserJoin）则离开
-                        remoteUserOffline.postValue(Pair(uid, -1))
-                }.start()
-            }
             "onUserOffline$uid".loge(TAG)
+
+//            remoteUserOffline.postValue(Pair(uid, reason))
+//            if (reason == Constants.USER_OFFLINE_QUIT) {
+//                remoteUserOffline.postValue(Pair(uid, reason))
+//            } else
+//            if (reason == Constants.USER_OFFLINE_DROPPED) { //对方网络异常
+//                remoteUserOffline.postValue(Pair(uid, reason))
+//                userOfflineInterval.subscribe {
+//                    // 没10秒发送给livedata，在有livedata发送声网云信令检测是否有回执消息，30秒后判断对方是否离线
+//                    if (it == 10L || it == 20L || it == 30L) {
+//
+//                    }
+//                }
+//                userOfflineInterval.finish {
+//                    if (it == OFFONLINE_TIME) { // 异常 则继续等待30秒 30秒内它还未恢复（恢复会走onUserJoin）则离开
+//                        remoteUserOffline.postValue(Pair(uid, -1))
+//                    }
+//                }.start()
+//            }
+
         }
     }
 
