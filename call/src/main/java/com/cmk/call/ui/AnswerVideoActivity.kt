@@ -47,13 +47,17 @@ class AnswerVideoActivity : BaseCallActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+    }
+
+    override fun onStart() {
+        super.onStart()
         initReceiveLayout()
         startRing()
         initLivedata()
     }
 
     private fun initReceiveLayout() {
-        binding.root.addView(bindingAnswer.root, 1)
+        binding.root.addView(bindingAnswer.root, 0)
         bindingAnswer.apply {
             tvCallState.text = "对方等待接听中"
             bindingAnswer.recyclerView.adapter = remoteAdapter
@@ -88,6 +92,25 @@ class AnswerVideoActivity : BaseCallActivity() {
     }
 
     /**
+     * 返回给被叫的回调：拒绝呼叫邀请成功
+     */
+    override fun onRemoteInvitationRefused(remoteInvitation: RemoteInvitation?) {
+        "onRemoteInvitationRefused()".loge(TAG)
+        finish()
+    }
+
+    /**
+     * /**
+     * 返回给被叫的回调：呼叫邀请已取消
+    */
+     */
+    override fun onRemoteInvitationCanceled(remoteInvitation: RemoteInvitation?) {
+        super.onRemoteInvitationCanceled(remoteInvitation)
+        "onRemoteInvitationCanceled()".loge(TAG)
+        finish()
+    }
+
+    /**
      * 远端发送的消息回调
      */
     private var isCallReceive = false // 标记对方是否收到云信令并回执
@@ -117,8 +140,8 @@ class AnswerVideoActivity : BaseCallActivity() {
 
     private fun localJoinRTC() {
         if (callMode == Constant.VIDEO_MODE) {
-            binding.root.removeViewAt(1)
-            binding.root.addView(bindingVideo.root, 1)
+            binding.root.removeViewAt(0)
+            binding.root.addView(bindingVideo.root, 0)
             setupLocalVideo()
         } else {
 

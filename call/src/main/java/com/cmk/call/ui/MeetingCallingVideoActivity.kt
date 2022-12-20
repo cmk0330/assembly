@@ -23,9 +23,12 @@ class MeetingCallingVideoActivity : BaseCallActivity() {
             layoutManager = GridLayoutManager(this@MeetingCallingVideoActivity, 2)
             adapter = scaleAdapter
         }
+        binding.ivHangUp.setOnClickListener {
+            finish()
+        }
     }
 
     private fun init() {
-
+        callViewModel.joinRtmChannel("1234")
     }
 }

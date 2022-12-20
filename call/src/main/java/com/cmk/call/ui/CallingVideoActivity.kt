@@ -56,7 +56,7 @@ class CallingVideoActivity : BaseCallActivity() {
     }
 
     private fun initReceiveLayout() {
-        binding.root.addView(bindingCalling.root, 1)
+        binding.root.addView(bindingCalling.root, 0)
         intentData = intent?.getParcelableExtra("intent_data")
         bindingCalling.apply {
             tvCallState.text = "呼叫中"
@@ -79,6 +79,14 @@ class CallingVideoActivity : BaseCallActivity() {
         val toString = localInvitation?.content.toString()
         toString.loge(TAG)
         runOnUiThread { localJoinRTC() }
+    }
+
+    /**
+     * 返回给主叫的回调：被叫已拒绝呼叫邀请。
+     */
+    override fun onLocalInvitationRefused(localInvitation: LocalInvitation?, var1: String?) {
+        super.onLocalInvitationRefused(localInvitation, var1)
+        finish()
     }
 
     /**
@@ -111,8 +119,8 @@ class CallingVideoActivity : BaseCallActivity() {
 
     private fun localJoinRTC() {
         if (callMode == Constant.VIDEO_MODE) {
-            binding.root.removeViewAt(1)
-            binding.root.addView(bindingVideo.root, 1)
+            binding.root.removeViewAt(0)
+            binding.root.addView(bindingVideo.root, 0)
             setupLocalVideo()
         } else {
 
