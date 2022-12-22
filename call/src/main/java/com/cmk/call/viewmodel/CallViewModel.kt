@@ -1,18 +1,17 @@
 package com.cmk.call.viewmodel
 
-import android.content.Context
 import android.util.Log
 import androidx.lifecycle.*
 import com.cmk.call.BuildConfig
 import com.cmk.call.event.RtmEventListener
 import com.cmk.core.BaseApp.Companion.application
-import com.cmk.core.ext.loge
-import io.agora.rtc2.RtcEngine
+import com.cmk.common.ext.loge
 import io.agora.rtm.*
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.math.log
 
 class CallViewModel : ViewModel(), LifecycleEventObserver {
     private val TAG = "CallViewModel"
@@ -45,7 +44,6 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
             viewModelScope.launch {
                 if (currentRemoteInvitation != null) {
                     rtmEventListener?.onRemoteInvitationReceived(currentRemoteInvitation)
-//                    cancelNotify()
                 }
             }
             needReCallBack = false
@@ -220,11 +218,21 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
     }
 
     /**
-     * 远端同意被叫邀请
+     * 接收来自远端的呼叫邀请
      */
     fun acceptRemoteInvitation() {
         remoteInvitationList.find { it.callerId == currentRemoteInvitation?.callerId }.apply {
-            rtmCallManager.acceptRemoteInvitation(currentRemoteInvitation, null)
+            rtmCallManager.acceptRemoteInvitation(
+                currentRemoteInvitation,
+                object : ResultCallback<Void> {
+                    override fun onSuccess(p0: Void?) {
+                        Log.e("onSuccess", "$p0")
+                    }
+
+                    override fun onFailure(p0: ErrorInfo?) {
+                        Log.e("onFailure", "$p0")
+                    }
+                })
             remoteInvitationList.remove(currentRemoteInvitation)
         }
     }
@@ -234,11 +242,21 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
     }
 
     /**
-     * 远端拒绝被叫邀请
+     * 拒绝来自对方的呼叫邀请。
      */
     fun refuseRemoteInvitation() {
         remoteInvitationList.find { it.callerId == currentRemoteInvitation?.callerId }.apply {
-            rtmCallManager.refuseRemoteInvitation(currentRemoteInvitation, null)
+            rtmCallManager.refuseRemoteInvitation(
+                currentRemoteInvitation,
+                object : ResultCallback<Void> {
+                    override fun onSuccess(p0: Void?) {
+                        Log.e("onSuccess", "$p0")
+                    }
+
+                    override fun onFailure(p0: ErrorInfo?) {
+                        Log.e("onFailure", "$p0")
+                    }
+                })
             remoteInvitationList.remove(currentRemoteInvitation)
         }
     }
@@ -391,7 +409,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          * 返回给被叫的回调：收到一条呼叫邀请。SDK 会同时返回一个 RemoteInvitation 对象供被叫管理。
          */
         override fun onRemoteInvitationReceived(p0: RemoteInvitation?) {
-            currentRemoteInvitation = p0
+            if (currentRemoteInvitation == null) currentRemoteInvitation = p0
             p0?.let { remoteInvitationList.add(p0) }
             rtmEventListener?.onRemoteInvitationReceived(p0)
             "onRemoteInvitationReceived()".loge(TAG)

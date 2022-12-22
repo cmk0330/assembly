@@ -1,16 +1,13 @@
 package com.cmk.call.viewmodel
 
 import android.content.Context
-import android.util.Log
 import android.view.SurfaceView
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import com.cmk.call.BuildConfig
 import com.cmk.call.Constant
 import com.cmk.call.ext.Preference
-import com.cmk.core.ext.loge
-import com.drake.net.time.Interval
+import com.cmk.common.ext.loge
 import io.agora.rtc2.ChannelMediaOptions
 import io.agora.rtc2.Constants
 import io.agora.rtc2.IRtcEngineEventHandler
@@ -18,9 +15,6 @@ import io.agora.rtc2.RtcEngine
 import io.agora.rtc2.video.CameraCapturerConfiguration
 import io.agora.rtc2.video.VideoCanvas
 import io.agora.rtc2.video.VideoEncoderConfiguration
-import kotlinx.coroutines.launch
-import java.util.concurrent.TimeUnit
-import kotlin.properties.Delegates
 
 class RtcViewModel : ViewModel() {
     private val TAG = "RtcViewModel"

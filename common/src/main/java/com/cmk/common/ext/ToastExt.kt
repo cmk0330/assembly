@@ -1,14 +1,8 @@
-package com.cmk.core.ext
+package com.cmk.common.ext
 
 import android.content.Context
-import android.view.Gravity
-import android.view.LayoutInflater
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.StringRes
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Created by luyao

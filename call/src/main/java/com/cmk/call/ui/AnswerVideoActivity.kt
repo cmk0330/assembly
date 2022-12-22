@@ -16,8 +16,8 @@ import com.cmk.call.databinding.LayoutAnswerVideoBinding
 import com.cmk.call.databinding.LayoutVideoBinding
 import com.cmk.call.ui.adapter.RemoteInvitationAdapter
 import com.cmk.call.viewmodel.RtcViewModel
-import com.cmk.core.ext.loge
-import com.cmk.core.ext.toast
+import com.cmk.common.ext.loge
+import com.cmk.common.ext.toast
 import com.drake.net.time.Interval
 import com.drake.net.utils.TipUtils
 import io.agora.rtc2.Constants
@@ -52,7 +52,6 @@ class AnswerVideoActivity : BaseCallActivity() {
     override fun onStart() {
         super.onStart()
         initReceiveLayout()
-        startRing()
         initLivedata()
     }
 
@@ -62,7 +61,10 @@ class AnswerVideoActivity : BaseCallActivity() {
             tvCallState.text = "对方等待接听中"
             bindingAnswer.recyclerView.adapter = remoteAdapter
             remoteAdapter.submitList(callViewModel.remoteInvitationList.toMutableList())
-            if (callViewModel.remoteInvitationList.isEmpty()) return
+            if (callViewModel.remoteInvitationList.isEmpty()) {
+                finish()
+                return
+            }
             callViewModel.remoteInvitationList.first().let {
                 JSONObject(it.content).apply {
                     callMode = getInt("Mode")
@@ -78,15 +80,18 @@ class AnswerVideoActivity : BaseCallActivity() {
             }
             remoteAdapter.setOnRefuseListener {
                 callViewModel.refuseRemoteInvitation()
+                stopRing()
                 finish()
             }
         }
+        startRing()
     }
 
     /**
      * 返回给被叫的回调：接受呼叫邀请成功
      */
     override fun onRemoteInvitationAccepted(remoteInvitation: RemoteInvitation?) {
+        super.onRemoteInvitationAccepted(remoteInvitation)
         "onRemoteInvitationAccepted".loge(TAG)
         runOnUiThread { localJoinRTC() }
     }
@@ -95,19 +100,21 @@ class AnswerVideoActivity : BaseCallActivity() {
      * 返回给被叫的回调：拒绝呼叫邀请成功
      */
     override fun onRemoteInvitationRefused(remoteInvitation: RemoteInvitation?) {
+        super.onRemoteInvitationRefused(remoteInvitation)
         "onRemoteInvitationRefused()".loge(TAG)
+        stopRing()
         finish()
     }
 
     /**
-     * /**
-     * 返回给被叫的回调：呼叫邀请已取消
-    */
+     * 返回给被叫的回调：呼叫邀请已取消成功
      */
     override fun onRemoteInvitationCanceled(remoteInvitation: RemoteInvitation?) {
         super.onRemoteInvitationCanceled(remoteInvitation)
         "onRemoteInvitationCanceled()".loge(TAG)
+        stopRing()
         finish()
+        toast("对方已取消")
     }
 
     /**
@@ -151,13 +158,13 @@ class AnswerVideoActivity : BaseCallActivity() {
             channelId = callViewModel.currentRemoteInvitation?.channelId,
             userId = calleeId
         )
-        stopRing()
         bindingVideo.apply {
             ivHangUp.setOnClickListener { leave(true) }
             ivSwitchCamera.setOnClickListener { rtcViewModel.switchCamera() }
             flMinScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
             flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
         }
+        stopRing()
     }
 
     private fun setupLocalVideo() {

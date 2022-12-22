@@ -1,4 +1,4 @@
-package com.cmk.core.ext
+package com.cmk.common.ext
 
 import android.util.Log
 import com.cmk.core.BuildConfig

@@ -2,13 +2,13 @@ package com.cmk.call.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
 import com.cmk.call.IntentData
 import com.cmk.call.databinding.ActivityP2pBinding
-import com.cmk.core.ext.loge
+import com.cmk.common.ext.loge
+import com.cmk.common.ext.toast
 import com.permissionx.guolindev.PermissionX
 import kotlinx.coroutines.launch
 
@@ -21,10 +21,10 @@ class P2PActivity : BaseCallActivity() {
     private val binding by lazy { ActivityP2pBinding.inflate(layoutInflater) }
 
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IAAUEYrnEIW5E7FW05YftEA30rB+k/gvUcUF86CRmOGCJqPg45sAAAAAEAC1T1eSSW2iYwEA6ANJbaJj"
+        "006aaa58676e73f41a086237149d9da6bc4IAA3nBqjGuxAQRmyXanIQh5u8pUs8+8IVmN7lHiDSE6J8qPg45sAAAAAEADA0yFEGQ+lYwEA6AMZD6Vj"
     private val userId = "1234"
     private val token1 =
-        "006aaa58676e73f41a086237149d9da6bc4IACGOwoCMxrtOWLKVcZkwh9BTnspykAoG78mFJiKws//4QdWUn4AAAAAEAB523awKW2iYwEA6AMpbaJj"
+        "006aaa58676e73f41a086237149d9da6bc4IABm+xPKFVZWRHjRva7hGQTaxjGd0nbvo2HORF97Iv0M1wdWUn4AAAAAEACsBiDMNg+lYwEA6AM2D6Vj"
     private val userId1 = "5678"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +36,7 @@ class P2PActivity : BaseCallActivity() {
                 scope.showRequestReasonDialog(deniedList, "请同意所有权限", "好的", "取消")
             }.request { allGranted, grantedList, deniedList ->
                 if (allGranted) {
-                    Toast.makeText(this@P2PActivity, "已同意权限", Toast.LENGTH_SHORT).show()
+                    toast("已同意权限")
                 } else {
                     "为同一全部权限".loge()
                 }
@@ -48,7 +48,7 @@ class P2PActivity : BaseCallActivity() {
 
         binding.btnLogin.setOnClickListener {
             lifecycleScope.launch {
-                if (callViewModel.login(token1, userId1)) {
+                if (callViewModel.login(token, userId)) {
                     "声网登录成功".loge()
                 } else {
                     "声网登录失败".loge()
@@ -58,7 +58,7 @@ class P2PActivity : BaseCallActivity() {
         binding.tvCreateLocal.setOnClickListener {
             callViewModel.queryOnline(userId1) {
                 if (!it) {
-                    Toast.makeText(this@P2PActivity, "对方不在线", Toast.LENGTH_SHORT).show()
+                    toast("对方不在线")
                     return@queryOnline
                 }
                 callViewModel.createLocalInvitation(
@@ -69,8 +69,9 @@ class P2PActivity : BaseCallActivity() {
                     "123123123",
                     "小小"
                 ) {
+                    callViewModel.sendLocalInvitation(channelId = "1234")
                     startActivity(Intent(this, CallingVideoActivity::class.java).apply {
-                        val data = IntentData(callerId = 1234, calleeId = 5678)
+                        val data = IntentData(calleeId = 5678)
                         val bundle = Bundle()
                         bundle.putParcelable("intent_data", data)
                         putExtras(bundle)

@@ -17,7 +17,7 @@ import com.cmk.call.databinding.ActivityP2pVideoBinding
 import com.cmk.call.databinding.LayoutCallingVideoBinding
 import com.cmk.call.databinding.LayoutVideoBinding
 import com.cmk.call.viewmodel.RtcViewModel
-import com.cmk.core.ext.loge
+import com.cmk.common.ext.loge
 import com.drake.net.time.Interval
 import com.drake.net.utils.TipUtils.toast
 import io.agora.rtc2.Constants
@@ -42,7 +42,7 @@ class CallingVideoActivity : BaseCallActivity() {
     private var intentData: IntentData? = null // 主动呼叫的用户数据
     private var callMode = 0 // 呼叫模式：0 视频 1 语音
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IAAUEYrnEIW5E7FW05YftEA30rB+k/gvUcUF86CRmOGCJqPg45sAAAAAEAC1T1eSSW2iYwEA6ANJbaJj"
+        "006aaa58676e73f41a086237149d9da6bc4IAB34ZVTZeoY/rRO0a9S3oTnMErzcv6YdGVsj8NYx1tBO6Pg45sAAAAAEADg/O2ljayjYwEA6AONrKNj"
     private val videoMap = mutableMapOf<String, SurfaceView>()
     private val KEY_LOCAL = "local_key"
     private val KEY_REMOTE = "remote_key"
@@ -51,7 +51,6 @@ class CallingVideoActivity : BaseCallActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         initReceiveLayout()
-        startRing()
         initLivedata()
     }
 
@@ -63,21 +62,19 @@ class CallingVideoActivity : BaseCallActivity() {
             Glide.with(this@CallingVideoActivity).load(intentData?.callerAvatar).into(sivAvatar)
             tvUserName.text = intentData?.callerName
             rtcViewModel.initRtc(this@CallingVideoActivity, callMode)
-            callViewModel.sendLocalInvitation(intentData?.callerId?.toString())
             ivCallingCancel.setOnClickListener {
                 callViewModel.cancelLocalInvitation()
-                finish()
             }
         }
+        startRing()
     }
 
     /**
      * 返回给主叫的回调：被叫已接受呼叫邀请
      */
     override fun onLocalInvitationAccepted(localInvitation: LocalInvitation?, var1: String?) {
+        super.onLocalInvitationAccepted(localInvitation, var1)
         "onLocalInvitationAccepted()".loge(TAG)
-        val toString = localInvitation?.content.toString()
-        toString.loge(TAG)
         runOnUiThread { localJoinRTC() }
     }
 
@@ -86,6 +83,17 @@ class CallingVideoActivity : BaseCallActivity() {
      */
     override fun onLocalInvitationRefused(localInvitation: LocalInvitation?, var1: String?) {
         super.onLocalInvitationRefused(localInvitation, var1)
+        stopRing()
+        finish()
+        toast("对方拒绝")
+    }
+
+    /**
+     * 返回给被叫的回调：呼叫邀请已取消
+     */
+    override fun onLocalInvitationCanceled(localInvitation: LocalInvitation?) {
+        super.onLocalInvitationCanceled(localInvitation)
+        stopRing()
         finish()
     }
 
@@ -130,13 +138,13 @@ class CallingVideoActivity : BaseCallActivity() {
             channelId = callViewModel.currentLocalInvitation?.channelId,
             userId = 1234
         )
-        stopRing()
         bindingVideo.apply {
             ivHangUp.setOnClickListener { leave(true) }
             ivSwitchCamera.setOnClickListener { rtcViewModel.switchCamera() }
             flMinScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
 //            flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
         }
+        stopRing()
     }
 
     private fun setupLocalVideo() {
