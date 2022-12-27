@@ -13,6 +13,7 @@ import com.cmk.call.Constant
 import com.cmk.call.R
 import com.cmk.call.databinding.ActivityP2pVideoBinding
 import com.cmk.call.databinding.LayoutAnswerVideoBinding
+import com.cmk.call.databinding.LayoutAudioBinding
 import com.cmk.call.databinding.LayoutVideoBinding
 import com.cmk.call.ui.adapter.RemoteInvitationAdapter
 import com.cmk.call.viewmodel.RtcViewModel
@@ -31,6 +32,7 @@ class AnswerVideoActivity : BaseCallActivity() {
     private val binding by lazy { ActivityP2pVideoBinding.inflate(layoutInflater) }
     private val bindingAnswer by lazy { LayoutAnswerVideoBinding.inflate(layoutInflater) }
     private val bindingVideo by lazy { LayoutVideoBinding.inflate(layoutInflater) }
+    private val bindingAudio by lazy { LayoutAudioBinding.inflate(layoutInflater) }
     private val ringingPlayer by lazy { MediaPlayer.create(this, R.raw.video_request) }
     private val rtcViewModel by viewModels<RtcViewModel>()
 
@@ -62,7 +64,6 @@ class AnswerVideoActivity : BaseCallActivity() {
             bindingAnswer.recyclerView.adapter = remoteAdapter
             remoteAdapter.submitList(callViewModel.remoteInvitationList.toMutableList())
             if (callViewModel.remoteInvitationList.isEmpty()) {
-                finish()
                 return
             }
             callViewModel.remoteInvitationList.first().let {
@@ -70,8 +71,9 @@ class AnswerVideoActivity : BaseCallActivity() {
                     callMode = getInt("Mode")
                     calleeId = getInt("CalleeId")
                     channelToken = getString("ChannelToken")
-                    Glide.with(this@AnswerVideoActivity).load(getString("Avatar")).into(sivAvatar)
-                    tvUserName.text = getString("UserName")
+                    Glide.with(this@AnswerVideoActivity).load(getString("CallerAvatar"))
+                        .into(sivAvatar)
+                    tvUserName.text = getString("CallerName")
                     rtcViewModel.initRtc(this@AnswerVideoActivity, callMode)
                 }
             }
@@ -79,7 +81,7 @@ class AnswerVideoActivity : BaseCallActivity() {
                 callViewModel.acceptRemoteInvitation(it)
             }
             remoteAdapter.setOnRefuseListener {
-                callViewModel.refuseRemoteInvitation()
+                callViewModel.refuseRemoteInvitation(it)
                 stopRing()
                 finish()
             }
@@ -88,12 +90,30 @@ class AnswerVideoActivity : BaseCallActivity() {
     }
 
     /**
+     * 音频与视频切换
+     */
+    private fun switchAudio() {
+        binding.root.removeViewAt(0)
+        binding.root.addView(bindingAudio.root, 0)
+        rtcViewModel.disableVideo()
+        bindingAudio.apply {
+            JSONObject(callViewModel.currentRemoteInvitation?.content.toString()).apply {
+                tvUserName.text = getString("CallerName")
+                Glide.with(this@AnswerVideoActivity)
+                    .load(getString("CallerAvatar"))
+                    .into(sivCalleeAvatar)
+            }
+            ivCallingCancel.setOnClickListener { leave(true) }
+        }
+    }
+
+    /**
      * 返回给被叫的回调：接受呼叫邀请成功
      */
     override fun onRemoteInvitationAccepted(remoteInvitation: RemoteInvitation?) {
         super.onRemoteInvitationAccepted(remoteInvitation)
         "onRemoteInvitationAccepted".loge(TAG)
-        runOnUiThread { localJoinRTC() }
+        runOnUiThread { localJoinRTC(remoteInvitation) }
     }
 
     /**
@@ -140,12 +160,15 @@ class AnswerVideoActivity : BaseCallActivity() {
                         isCallReceive = true
                         toast("当前网络信号差")
                     }
+                    Constant.SWITCH_AUDIO -> { // 切换到视频通话
+
+                    }
                 }
             }
         }
     }
 
-    private fun localJoinRTC() {
+    private fun localJoinRTC(remoteInvitation: RemoteInvitation?) {
         if (callMode == Constant.VIDEO_MODE) {
             binding.root.removeViewAt(0)
             binding.root.addView(bindingVideo.root, 0)
@@ -155,7 +178,7 @@ class AnswerVideoActivity : BaseCallActivity() {
         }
         rtcViewModel.joinChannel(
             channelToken = channelToken,
-            channelId = callViewModel.currentRemoteInvitation?.channelId,
+            channelId = remoteInvitation?.channelId,
             userId = calleeId
         )
         bindingVideo.apply {
@@ -174,6 +197,7 @@ class AnswerVideoActivity : BaseCallActivity() {
             flMinScreenVideo.tag = KEY_LOCAL
             flMinScreenVideo.addView(surfaceView)
             rtcViewModel.setupLocalVideo(calleeId, surfaceView)
+            ivSwitchAudio.setOnClickListener { switchAudio() }
         }
         setSurfaceViewLayer(true, surfaceView)
     }
@@ -267,6 +291,11 @@ class AnswerVideoActivity : BaseCallActivity() {
                         toast("对方网路异常")
                     }
                 }
+            }
+        }
+        rtcViewModel.remoteEnableVideoState.observe(this) {
+            if (!it.second) {
+                switchAudio()
             }
         }
     }

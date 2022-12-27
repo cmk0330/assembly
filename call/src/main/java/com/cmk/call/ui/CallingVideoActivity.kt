@@ -13,9 +13,8 @@ import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
 import com.cmk.call.IntentData
 import com.cmk.call.R
-import com.cmk.call.databinding.ActivityP2pVideoBinding
-import com.cmk.call.databinding.LayoutCallingVideoBinding
-import com.cmk.call.databinding.LayoutVideoBinding
+import com.cmk.call.databinding.*
+import com.cmk.call.ui.adapter.LocalInvitationAdapter
 import com.cmk.call.viewmodel.RtcViewModel
 import com.cmk.common.ext.loge
 import com.drake.net.time.Interval
@@ -33,16 +32,19 @@ class CallingVideoActivity : BaseCallActivity() {
     private val TAG = "CallingVideoActivity"
     private val binding by lazy { ActivityP2pVideoBinding.inflate(layoutInflater) }
     private val bindingCalling by lazy { LayoutCallingVideoBinding.inflate(layoutInflater) }
+    private val bindingCallingGroup by lazy { LayoutCallingGroupVideoBinding.inflate(layoutInflater) }
     private val bindingVideo by lazy { LayoutVideoBinding.inflate(layoutInflater) }
+    private val bindingAudio by lazy { LayoutAudioBinding.inflate(layoutInflater) }
     private val ringingPlayer by lazy { MediaPlayer.create(this, R.raw.video_request) }
+    private val localAdapter by lazy { LocalInvitationAdapter() }
     private val rtcViewModel by viewModels<RtcViewModel>()
 
     // userOfflineInterval 收到对方异常离开 倒计30秒 30秒内对方还未恢复 则退出
     private val userOfflineInterval by lazy { Interval(10, 1, TimeUnit.SECONDS, 1) }
-    private var intentData: IntentData? = null // 主动呼叫的用户数据
     private var callMode = 0 // 呼叫模式：0 视频 1 语音
+    private var isGroupCall: Boolean? = false
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IAB34ZVTZeoY/rRO0a9S3oTnMErzcv6YdGVsj8NYx1tBO6Pg45sAAAAAEADg/O2ljayjYwEA6AONrKNj"
+        "006aaa58676e73f41a086237149d9da6bc4IABQ/GLXJdl99b9RpOZDpfHtUV8PA0NCCO4Z4xaG7m8DC6Pg45sAAAAAIgDqwCDhO0uqYwQAAQA7S6pjAgA7S6pjAwA7S6pjBAA7S6pj"
     private val videoMap = mutableMapOf<String, SurfaceView>()
     private val KEY_LOCAL = "local_key"
     private val KEY_REMOTE = "remote_key"
@@ -50,23 +52,70 @@ class CallingVideoActivity : BaseCallActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
-        initReceiveLayout()
+        isGroupCall = intent?.getBooleanExtra("isGroupCall", false)
+        if (isGroupCall == true)
+            initGroupReceiveLayout()
+        else initReceiveLayout()
         initLivedata()
     }
 
-    private fun initReceiveLayout() {
-        binding.root.addView(bindingCalling.root, 0)
-        intentData = intent?.getParcelableExtra("intent_data")
-        bindingCalling.apply {
+    /**
+     * 群体邀请时
+     */
+    private fun initGroupReceiveLayout() {
+        binding.root.addView(bindingCallingGroup.root, 0)
+        bindingCallingGroup.apply {
+            val json = JSONObject(callViewModel.localInvitationList.first().content)
+            tvUserName.text = json.getString("CalleeName")
+            Glide.with(this@CallingVideoActivity)
+                .load(json.getString("CalleeAvatar"))
+                .into(sivCalleeAvatar)
             tvCallState.text = "呼叫中"
-            Glide.with(this@CallingVideoActivity).load(intentData?.callerAvatar).into(sivAvatar)
-            tvUserName.text = intentData?.callerName
+            recyclerView.adapter = localAdapter
+            localAdapter.submitList(callViewModel.localInvitationList.toMutableList())
             rtcViewModel.initRtc(this@CallingVideoActivity, callMode)
-            ivCallingCancel.setOnClickListener {
+            localAdapter.setOnCancelListener {
                 callViewModel.cancelLocalInvitation()
             }
         }
         startRing()
+    }
+
+    /**
+     * 一对一邀请时
+     */
+    private fun initReceiveLayout() {
+        binding.root.addView(bindingCalling.root, 0)
+        val intentData = intent?.getParcelableExtra<IntentData>("intent_data")
+        bindingCalling.apply {
+            Glide.with(this@CallingVideoActivity)
+                .load(intentData?.callerAvatar)
+                .into(sivCalleeAvatar)
+            tvUserName.text = intentData?.callerName
+            ivCallingCancel.setOnClickListener {
+                callViewModel.cancelLocalInvitation()
+            }
+        }
+        rtcViewModel.initRtc(this@CallingVideoActivity, callMode)
+        startRing()
+    }
+
+    /**
+     * 音频与视频切换
+     */
+    private fun switchAudio() {
+        binding.root.removeViewAt(0)
+        binding.root.addView(bindingAudio.root, 0)
+        rtcViewModel.disableVideo()
+        bindingAudio.apply {
+            JSONObject(callViewModel.currentLocalInvitation?.content.toString()).apply {
+                tvUserName.text = getString("CalleeName")
+                Glide.with(this@CallingVideoActivity)
+                    .load(getString("CalleeAvatar"))
+                    .into(sivCalleeAvatar)
+            }
+            ivCallingCancel.setOnClickListener { leave(true) }
+        }
     }
 
     /**
@@ -75,7 +124,7 @@ class CallingVideoActivity : BaseCallActivity() {
     override fun onLocalInvitationAccepted(localInvitation: LocalInvitation?, var1: String?) {
         super.onLocalInvitationAccepted(localInvitation, var1)
         "onLocalInvitationAccepted()".loge(TAG)
-        runOnUiThread { localJoinRTC() }
+        runOnUiThread { localJoinRTC(localInvitation) }
     }
 
     /**
@@ -83,8 +132,10 @@ class CallingVideoActivity : BaseCallActivity() {
      */
     override fun onLocalInvitationRefused(localInvitation: LocalInvitation?, var1: String?) {
         super.onLocalInvitationRefused(localInvitation, var1)
-        stopRing()
-        finish()
+        if (callViewModel.remoteInvitationList.isEmpty()) {
+            stopRing()
+            finish()
+        }
         toast("对方拒绝")
     }
 
@@ -93,8 +144,10 @@ class CallingVideoActivity : BaseCallActivity() {
      */
     override fun onLocalInvitationCanceled(localInvitation: LocalInvitation?) {
         super.onLocalInvitationCanceled(localInvitation)
-        stopRing()
-        finish()
+        if (callViewModel.remoteInvitationList.isEmpty()) {
+            stopRing()
+            finish()
+        }
     }
 
     /**
@@ -125,7 +178,7 @@ class CallingVideoActivity : BaseCallActivity() {
         }
     }
 
-    private fun localJoinRTC() {
+    private fun localJoinRTC(localInvitation: LocalInvitation?) {
         if (callMode == Constant.VIDEO_MODE) {
             binding.root.removeViewAt(0)
             binding.root.addView(bindingVideo.root, 0)
@@ -135,13 +188,26 @@ class CallingVideoActivity : BaseCallActivity() {
         }
         rtcViewModel.joinChannel(
             channelToken = token,
-            channelId = callViewModel.currentLocalInvitation?.channelId,
+            channelId = localInvitation?.channelId,
             userId = 1234
         )
         bindingVideo.apply {
             ivHangUp.setOnClickListener { leave(true) }
             ivSwitchCamera.setOnClickListener { rtcViewModel.switchCamera() }
             flMinScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
+            ivSwitchAudio.setOnClickListener {
+                switchAudio()
+//                callViewModel.sendMessage(
+//                    userId = callViewModel.currentLocalInvitation?.calleeId.toString(),
+//                    msg = JSONObject().apply {
+//                        put(Constant.MESSAGE_TYPE, Constant.SWITCH_AUDIO)
+//                    }.toString()
+//                ) {
+//                    if (it) {
+//                        switchAudio()
+//                    }
+//                }
+            }
 //            flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
         }
         stopRing()
@@ -248,6 +314,11 @@ class CallingVideoActivity : BaseCallActivity() {
                         toast("对方网络异常")
                     }
                 }.start()
+            }
+        }
+        rtcViewModel.remoteEnableVideoState.observe(this) {
+            if (!it.second) {
+                switchAudio()
             }
         }
     }

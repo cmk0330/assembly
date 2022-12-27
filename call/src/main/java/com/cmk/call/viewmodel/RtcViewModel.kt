@@ -25,6 +25,7 @@ class RtcViewModel : ViewModel() {
     val remoteUserJoin = MutableLiveData<Int>()
     val remoteVideoState = MutableLiveData<Pair<Int, Int>>()
     val remoteVideoDecode = MutableLiveData<Pair<Int, Int>>()
+    val remoteEnableVideoState = MutableLiveData<Pair<Int, Boolean>>()
 
     fun initRtc(context: Context, callType: Int) {
         rtcEngine = RtcEngine.create(context, BuildConfig.AGORA_APPID, IRtcEngineEventHandlerImpl())
@@ -186,6 +187,14 @@ class RtcViewModel : ViewModel() {
          */
         override fun onRemoteAudioStateChanged(uid: Int, state: Int, reason: Int, elapsed: Int) {
             super.onRemoteAudioStateChanged(uid, state, reason, elapsed)
+        }
+
+        /**
+         * 远端用户开/关视频模块回调。
+         */
+        override fun onUserEnableVideo(uid: Int, enabled: Boolean) {
+            super.onUserEnableVideo(uid, enabled)
+            remoteEnableVideoState.postValue(Pair(uid, enabled))
         }
 
         /**

@@ -46,18 +46,16 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="56dp"
         android:src="@drawable/ic_mic"
-        app:layout_constraintBottom_toBottomOf="@id/iv_calling_cancel"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/iv_calling_cancel" />
+        app:layout_constraintBottom_toTopOf="@id/recycler_view"
+        app:layout_constraintStart_toStartOf="parent" />
 
-    <ImageView
-        android:id="@+id/iv_calling_cancel"
-        android:layout_width="wrap_content"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="56dp"
-        android:layout_marginBottom="64dp"
-        android:src="@drawable/ic_call_end"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_marginBottom="56dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBaseline_toBottomOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -6,7 +6,9 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.cmk.call.R
+import com.google.android.material.imageview.ShapeableImageView
 import io.agora.rtm.RemoteInvitation
 import org.json.JSONObject
 
@@ -24,8 +26,12 @@ class RemoteInvitationAdapter : RecyclerView.Adapter<RemoteInvitationAdapter.Rem
 
     override fun onBindViewHolder(holder: RemoteInvitationVH, position: Int) {
         val item = dataList.get(position)
-        val callerName = JSONObject(item.content).getString("UserName")
-        holder.tvCallername.text = callerName
+        JSONObject(item.content).apply {
+            holder.tvCallerName.text = getString("CallerName")
+            Glide.with(holder.ivCallerAvatar)
+                .load(getString("CallerAvatar"))
+                .into(holder.ivCallerAvatar)
+        }
         holder.ivAccept.setOnClickListener {
             onAcceptListener?.invoke(dataList[position])
         }
@@ -55,6 +61,7 @@ class RemoteInvitationAdapter : RecyclerView.Adapter<RemoteInvitationAdapter.Rem
     class RemoteInvitationVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivAccept: ImageView = itemView.findViewById(R.id.iv_receive_accept)
         val ivRefuse: ImageView = itemView.findViewById(R.id.iv_receive_refuse)
-        val tvCallername = itemView.findViewById<TextView>(R.id.tv_caller_user)
+        val tvCallerName = itemView.findViewById<TextView>(R.id.tv_caller_user)
+        val ivCallerAvatar = itemView.findViewById<ShapeableImageView>(R.id.iv_caller_avatar)
     }
 }

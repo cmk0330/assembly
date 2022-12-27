@@ -48,6 +48,16 @@
         android:id="@+id/iv_switch_audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:src="@mipmap/ic_switch_audio"
+        app:layout_constraintBottom_toTopOf="@id/iv_switch_mic"
+        app:layout_constraintEnd_toEndOf="@id/iv_switch_mic"
+        app:layout_constraintStart_toStartOf="@id/iv_switch_mic" />
+
+    <ImageView
+        android:id="@+id/iv_switch_mic"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginBottom="56dp"
         android:src="@drawable/ic_mic"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -58,19 +68,19 @@
         android:id="@+id/iv_hang_up"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_call_end"
-        app:layout_constraintBottom_toBottomOf="@id/iv_switch_audio"
+        android:src="@mipmap/ic_hang_up"
+        app:layout_constraintBottom_toBottomOf="@id/iv_switch_mic"
         app:layout_constraintEnd_toStartOf="@id/iv_switch_camera"
-        app:layout_constraintStart_toEndOf="@id/iv_switch_audio"
-        app:layout_constraintTop_toTopOf="@id/iv_switch_audio" />
+        app:layout_constraintStart_toEndOf="@id/iv_switch_mic"
+        app:layout_constraintTop_toTopOf="@id/iv_switch_mic" />
 
     <ImageView
         android:id="@+id/iv_switch_camera"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_switch_camera"
-        app:layout_constraintBottom_toBottomOf="@id/iv_switch_audio"
+        app:layout_constraintBottom_toBottomOf="@id/iv_switch_mic"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/iv_hang_up"
-        app:layout_constraintTop_toTopOf="@id/iv_switch_audio" />
+        app:layout_constraintTop_toTopOf="@id/iv_switch_mic" />
 </androidx.constraintlayout.widget.ConstraintLayout>

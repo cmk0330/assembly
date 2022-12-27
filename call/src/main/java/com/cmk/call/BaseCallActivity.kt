@@ -30,7 +30,7 @@ open class BaseCallActivity : BaseActivity(), RtmEventListener {
      * 返回给被叫的回调：收到一条呼叫邀请
      */
     override fun onRemoteInvitationReceived(remoteInvitation: RemoteInvitation?) {
-        super.onRemoteInvitationReceived(remoteInvitation)
+//        super.onRemoteInvitationReceived(remoteInvitation)?
         startActivity(Intent(this, AnswerVideoActivity::class.java))
     }
 

@@ -6,7 +6,7 @@
     android:layout_marginTop="16dp">
 
     <com.google.android.material.imageview.ShapeableImageView
-        android:id="@+id/iv_caller_avatar"
+        android:id="@+id/iv_callee_avatar"
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:layout_marginStart="40dp"
@@ -16,29 +16,19 @@
         app:shapeAppearance="@style/CircleStyle" />
 
     <TextView
-        android:id="@+id/tv_caller_user"
+        android:id="@+id/tv_callee_user"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
         android:text="张无忌"
         android:textColor="@color/black"
         android:textSize="16sp"
-        app:layout_constraintBottom_toBottomOf="@id/iv_caller_avatar"
-        app:layout_constraintStart_toEndOf="@id/iv_caller_avatar"
-        app:layout_constraintTop_toTopOf="@id/iv_caller_avatar" />
-
-    <ImageView
-        android:id="@+id/iv_receive_accept"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="16dp"
-        android:src="@mipmap/ic_accept"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/iv_receive_refuse" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
-        android:id="@+id/iv_receive_refuse"
+        android:id="@+id/iv_cancel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginEnd="40dp"

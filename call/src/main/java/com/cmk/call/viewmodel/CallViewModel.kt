@@ -3,6 +3,7 @@ package com.cmk.call.viewmodel
 import android.util.Log
 import androidx.lifecycle.*
 import com.cmk.call.BuildConfig
+import com.cmk.call.entity.CallEntity
 import com.cmk.call.event.RtmEventListener
 import com.cmk.core.BaseApp.Companion.application
 import com.cmk.common.ext.loge
@@ -29,9 +30,10 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
     }
     val rtmCallManager by lazy { rtmClient.rtmCallManager }
     private var rtmChannel: RtmChannel? = null
+    var firstLocalInvitation: LocalInvitation? = null
     var currentLocalInvitation: LocalInvitation? = null
     val localInvitationList = mutableSetOf<LocalInvitation>() // 同时发送多人邀请
-    var currentRemoteInvitation: RemoteInvitation? = null
+    var currentRemoteInvitation: RemoteInvitation? = null // 正在通话的RemoteInvitation
     val remoteInvitationList = mutableSetOf<RemoteInvitation>() // 收到多人的呼叫邀请
 
     init {
@@ -144,29 +146,35 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
     }
 
     /**
-     * 创建单个邀请
+     * 创建一对一邀请
      */
     fun createLocalInvitation(
-        calleeId: String, // 被叫者id
-        callerId: String, // 呼叫者id
-        channelToken: String, // 呼叫者token
         mode: Int,
+        calleeId: String, // 被叫者id
+        channelToken: String, // 呼叫者token
+        channelId: String,
         callerAvatar: String,
         callerName: String,
+        calleeName: String,
+        calleeAvatar: String,
         block: (() -> Unit)? = null
     ) {
         currentLocalInvitation = rtmCallManager.createLocalInvitation(calleeId).apply {
+            this.channelId = channelId
             content = JSONObject().apply {
                 put("Conference", false) // 是否是多人童话（会议）
-                put("Mode", mode) //// 音频 or 视频
+                put("Mode", mode) // 音频 or 视频
+                put("ChannelId", channelId) // 频道id
                 put("ChannelToken", channelToken)
+                put("CallerName", callerName)
+                put("CallerAvatar", callerAvatar)
                 put("CalleeId", calleeId)
-                put("CallerId", callerId)
-                put("Avatar", callerAvatar)
-                put("UserName", callerName)
+                put("CalleeName", calleeName)
+                put("CalleeAvatar", calleeAvatar)
 
             }.toString()
         }
+        rtmCallManager.sendLocalInvitation(currentLocalInvitation, null)
         block?.invoke()
     }
 
@@ -174,21 +182,33 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
      * 创建多人邀请，一人接听后取消其他邀请
      */
     fun createLocalInvitationList(
-        peerIds: List<String>,
+        list: List<CallEntity>,
         mode: Int,
         channelId: String,
+        channelToken: String, // 呼叫者token
+        callerName: String,
+        callerAvatar: String,
         block: (() -> Unit)? = null
     ) {
-        peerIds.forEach {
-            rtmCallManager.createLocalInvitation(it).apply {
+        list.forEach { callEntity ->
+            val localInvitation = rtmCallManager.createLocalInvitation(callEntity.calleeId).apply {
+                this.channelId = channelId
                 content = JSONObject().apply {
-                    put("Mode", mode) //// 音频 or 视频
-                    put("ChannelId", channelId) // 频道id
                     put("Conference", false) // 是否是多人童话（会议）
+                    put("Mode", mode) // 音频 or 视频
+                    put("ChannelId", channelId) // 频道id
+                    put("ChannelToken", channelToken)
+                    put("CallerName", callerName)
+                    put("CallerAvatar", callerAvatar)
+                    put("CalleeId", callEntity.calleeId)
+                    put("CalleeName", callEntity.calleeName)
+                    put("CalleeAvatar", callEntity.calleeAvatar)
                 }.toString()
             }
-            block?.invoke()
+            localInvitationList.add(localInvitation)
+            rtmCallManager.sendLocalInvitation(localInvitation, null)
         }
+        block?.invoke()
     }
 
     /**
@@ -244,21 +264,8 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
     /**
      * 拒绝来自对方的呼叫邀请。
      */
-    fun refuseRemoteInvitation() {
-        remoteInvitationList.find { it.callerId == currentRemoteInvitation?.callerId }.apply {
-            rtmCallManager.refuseRemoteInvitation(
-                currentRemoteInvitation,
-                object : ResultCallback<Void> {
-                    override fun onSuccess(p0: Void?) {
-                        Log.e("onSuccess", "$p0")
-                    }
-
-                    override fun onFailure(p0: ErrorInfo?) {
-                        Log.e("onFailure", "$p0")
-                    }
-                })
-            remoteInvitationList.remove(currentRemoteInvitation)
-        }
+    fun refuseRemoteInvitation(invitation: RemoteInvitation?) {
+        rtmCallManager.refuseRemoteInvitation(invitation, null)
     }
 
     /**
@@ -286,7 +293,6 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
             it.release()
         }
     }
-
 
     /**
      * 发送点对点消息
@@ -357,7 +363,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          * 返回给主叫的回调：被叫已收到呼叫邀请。
          */
         override fun onLocalInvitationReceivedByPeer(p0: LocalInvitation?) {
-            p0?.let { localInvitationList.add(it) }
+//            p0?.let { localInvitationList.add(it) }
             "onLocalInvitationReceivedByPeer()".loge(TAG)
             rtmEventListener?.onLocalInvitationReceivedByPeer(p0)
         }
@@ -366,11 +372,12 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          * 返回给主叫的回调：被叫已接受呼叫邀请
          */
         override fun onLocalInvitationAccepted(p0: LocalInvitation?, p1: String?) {
-//            currentLocalInvitation = p0
+            if (currentLocalInvitation == null) currentLocalInvitation = p0
             // 当呼叫多人时，其中一者接受后将其余呼叫取消
             localInvitationList.filter { it.calleeId != p0?.calleeId }.forEach {
                 rtmEventListener?.onLocalInvitationCanceled(it)
             }
+            localInvitationList.clear()
             "onLocalInvitationAccepted()".loge(TAG)
             rtmEventListener?.onLocalInvitationAccepted(p0, p1)
         }
@@ -379,6 +386,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          * 返回给主叫的回调：被叫已拒绝呼叫邀请。
          */
         override fun onLocalInvitationRefused(p0: LocalInvitation?, p1: String?) {
+            currentLocalInvitation = null
             localInvitationList.find { it.calleeId == p0?.calleeId }
                 .also { localInvitationList.remove(it) }
             "onLocalInvitationRefused()".loge(TAG)
@@ -389,6 +397,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          * 返回给主叫的回调：呼叫邀请已被取消。
          */
         override fun onLocalInvitationCanceled(p0: LocalInvitation?) {
+            currentLocalInvitation = null
             localInvitationList.find { it.calleeId == p0?.calleeId }
                 .also { localInvitationList.remove(it) }
             "onLocalInvitationCanceled()".loge(TAG)
@@ -399,6 +408,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          * 返回给主叫的回调：发出的呼叫邀请失败。可能对方一直没有接听
          */
         override fun onLocalInvitationFailure(p0: LocalInvitation?, p1: Int) {
+            currentLocalInvitation = null
             localInvitationList.find { it.calleeId == p0?.calleeId }
                 .also { localInvitationList.remove(it) }
             rtmEventListener?.onLocalInvitationFailure(p0, p1)
@@ -409,7 +419,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          * 返回给被叫的回调：收到一条呼叫邀请。SDK 会同时返回一个 RemoteInvitation 对象供被叫管理。
          */
         override fun onRemoteInvitationReceived(p0: RemoteInvitation?) {
-            if (currentRemoteInvitation == null) currentRemoteInvitation = p0
+//            if (currentRemoteInvitation == null) currentRemoteInvitation = p0
             p0?.let { remoteInvitationList.add(p0) }
             rtmEventListener?.onRemoteInvitationReceived(p0)
             "onRemoteInvitationReceived()".loge(TAG)
@@ -432,9 +442,13 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          */
         override fun onRemoteInvitationRefused(p0: RemoteInvitation?) {
             remoteInvitationList.find { it.callerId == p0?.callerId }
-                .also { remoteInvitationList.remove(it) }
+                .also {
+                    if (currentRemoteInvitation?.callerId == it?.callerId)
+                        currentRemoteInvitation = null
+                    remoteInvitationList.remove(it)
+                }
             "onRemoteInvitationRefused()".loge(TAG)
-            rtmEventListener?.onRemoteInvitationReceived(p0)
+            rtmEventListener?.onRemoteInvitationRefused(p0)
         }
 
         /**
@@ -442,7 +456,11 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          */
         override fun onRemoteInvitationCanceled(p0: RemoteInvitation?) {
             remoteInvitationList.find { it.callerId == p0?.callerId }
-                .also { remoteInvitationList.remove(it) }
+                .also {
+                    if (currentRemoteInvitation?.callerId == it?.callerId)
+                        currentRemoteInvitation = null
+                    remoteInvitationList.remove(it)
+                }
             "onRemoteInvitationCanceled()".loge(TAG)
             rtmEventListener?.onRemoteInvitationCanceled(p0)
         }
@@ -452,7 +470,11 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
          */
         override fun onRemoteInvitationFailure(p0: RemoteInvitation?, p1: Int) {
             remoteInvitationList.find { it.callerId == p0?.callerId }
-                .also { remoteInvitationList.remove(it) }
+                .also {
+                    if (currentRemoteInvitation?.callerId == it?.callerId)
+                        currentRemoteInvitation = null
+                    remoteInvitationList.remove(it)
+                }
             "onRemoteInvitationFailure()".loge(TAG)
             rtmEventListener?.onRemoteInvitationFailure(p0, p1)
         }
