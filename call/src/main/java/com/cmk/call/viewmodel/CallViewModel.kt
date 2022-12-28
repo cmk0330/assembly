@@ -232,9 +232,7 @@ class CallViewModel : ViewModel(), LifecycleEventObserver {
      * 本地主叫取消邀请
      */
     fun cancelLocalInvitation() {
-        localInvitationList.forEach {
-            rtmCallManager.cancelLocalInvitation(it, null)
-        }
+        rtmCallManager.cancelLocalInvitation(currentLocalInvitation, null)
     }
 
     /**

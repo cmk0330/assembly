@@ -2,17 +2,14 @@ package com.cmk.call.ui
 
 import android.content.Intent
 import android.os.Bundle
-import android.telecom.Call
 import androidx.lifecycle.lifecycleScope
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
-import com.cmk.call.IntentData
+import com.cmk.call.entity.IntentData
 import com.cmk.call.databinding.ActivityP2pBinding
-import com.cmk.call.entity.CallEntity
 import com.cmk.common.ext.loge
 import com.cmk.common.ext.toast
 import com.permissionx.guolindev.PermissionX
-import io.agora.rtm.LocalInvitation
 import kotlinx.coroutines.launch
 
 class P2PActivity : BaseCallActivity() {
@@ -24,10 +21,10 @@ class P2PActivity : BaseCallActivity() {
     private val binding by lazy { ActivityP2pBinding.inflate(layoutInflater) }
 
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IABQ/GLXJdl99b9RpOZDpfHtUV8PA0NCCO4Z4xaG7m8DC6Pg45sAAAAAIgDqwCDhO0uqYwQAAQA7S6pjAgA7S6pjAwA7S6pjBAA7S6pj"
+        "006aaa58676e73f41a086237149d9da6bc4IAC/AWeX05acGnJZkCtb0IJPBjT9BZ4fBBZ186CGO/gZb6Pg45sAAAAAIgDWRPbPC/+sYwQAAQAL/6xjAgAL/6xjAwAL/6xjBAAL/6xj"
     private val userId = "1234"
     private val token1 =
-        "006aaa58676e73f41a086237149d9da6bc4IADK5Bei255brgF3LzZRbcB0b9SpghCnfD6b3eWVUe3+8QdWUn4AAAAAIgCZvbkzWUuqYwQAAQBZS6pjAgBZS6pjAwBZS6pjBABZS6pj"
+        "006aaa58676e73f41a086237149d9da6bc4IAAlkEPCvuO0nmX1lK3kxtg4PNzBhkmokON+usCPURDu2gdWUn4AAAAAIgCTCcvYJf+sYwQAAQAl/6xjAgAl/6xjAwAl/6xjBAAl/6xj"
     private val userId1 = "5678"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +48,7 @@ class P2PActivity : BaseCallActivity() {
 
         binding.btnLogin.setOnClickListener {
             lifecycleScope.launch {
-                if (callViewModel.login(token1, userId1)) {
+                if (callViewModel.login(token, userId)) {
                     "声网登录成功".loge()
                 } else {
                     "声网登录失败".loge()

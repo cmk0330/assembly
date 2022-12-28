@@ -1,17 +1,16 @@
 package com.cmk.call.ui
 
+import android.annotation.SuppressLint
 import android.graphics.PixelFormat
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.view.SurfaceView
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import androidx.activity.viewModels
 import androidx.lifecycle.observe
 import com.bumptech.glide.Glide
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
-import com.cmk.call.IntentData
+import com.cmk.call.entity.IntentData
 import com.cmk.call.R
 import com.cmk.call.databinding.*
 import com.cmk.call.ui.adapter.LocalInvitationAdapter
@@ -24,7 +23,6 @@ import io.agora.rtm.LocalInvitation
 import io.agora.rtm.RtmMessage
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
-import kotlin.collections.mutableMapOf
 import kotlin.collections.set
 
 
@@ -44,10 +42,13 @@ class CallingVideoActivity : BaseCallActivity() {
     private var callMode = 0 // 呼叫模式：0 视频 1 语音
     private var isGroupCall: Boolean? = false
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IABQ/GLXJdl99b9RpOZDpfHtUV8PA0NCCO4Z4xaG7m8DC6Pg45sAAAAAIgDqwCDhO0uqYwQAAQA7S6pjAgA7S6pjAwA7S6pjBAA7S6pj"
+        "006aaa58676e73f41a086237149d9da6bc4IAC/AWeX05acGnJZkCtb0IJPBjT9BZ4fBBZ186CGO/gZb6Pg45sAAAAAIgDWRPbPC/+sYwQAAQAL/6xjAgAL/6xjAwAL/6xjBAAL/6xj"
     private val videoMap = mutableMapOf<String, SurfaceView>()
     private val KEY_LOCAL = "local_key"
     private val KEY_REMOTE = "remote_key"
+    private var isSmall = false // 是否为缩小状态
+    private var lastTx = 0f
+    private var lastTy = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -178,6 +179,7 @@ class CallingVideoActivity : BaseCallActivity() {
         }
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun localJoinRTC(localInvitation: LocalInvitation?) {
         if (callMode == Constant.VIDEO_MODE) {
             binding.root.removeViewAt(0)
@@ -207,6 +209,50 @@ class CallingVideoActivity : BaseCallActivity() {
 //                        switchAudio()
 //                    }
 //                }
+            }
+            ivFullScreen.setOnClickListener {
+                if (isSmall) {
+                    val lp = window.attributes
+                    lp.x = 0
+                    lp.y = 0
+                    window.attributes = lp
+                    window.setLayout(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    isSmall = false
+                } else {
+                    flMinScreenVideo.visibility = View.GONE
+                    toSmall()
+                }
+            }
+            ivSwitchMic.setOnTouchListener { v, event ->
+                when (event.getAction()) {
+                    MotionEvent.ACTION_DOWN -> {
+                        lastTx = event.getRawX()
+                        lastTy = event.getRawY()
+                        return@setOnTouchListener true
+                    }
+                    MotionEvent.ACTION_MOVE -> {
+                        val dx: Float = event.getRawX() - lastTx
+                        val dy: Float = event.getRawY() - lastTy
+                        lastTx = event.getRawX()
+                        lastTy = event.getRawY()
+                        if (isSmall) {
+                            val lp = window.attributes
+                            lp.x += dx.toInt()
+                            lp.y += dy.toInt()
+                            window.attributes = lp
+                        }
+                    }
+                    MotionEvent.ACTION_UP -> {
+                        return@setOnTouchListener true
+                    }
+                    MotionEvent.ACTION_CANCEL -> {
+                        return@setOnTouchListener true
+                    }
+                }
+                false
             }
 //            flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
         }
@@ -377,6 +423,18 @@ class CallingVideoActivity : BaseCallActivity() {
         surfaceView.setZOrderOnTop(isOnTop)
 //        surfaceView.setZOrderMediaOverlay(true)
     }
+
+    private fun toSmall() {
+        isSmall = true
+        val m = windowManager
+        val d: Display = m.defaultDisplay
+        val p = window.attributes
+        p.height = (d.height * 0.6).toInt()
+        p.width = (d.width * 0.6).toInt()
+        p.dimAmount = 0.0f
+        window.attributes = p
+    }
+
 
     override fun onDestroy() {
         super.onDestroy()

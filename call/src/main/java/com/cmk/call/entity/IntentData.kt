@@ -1,4 +1,4 @@
-package com.cmk.call
+package com.cmk.call.entity
 
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize

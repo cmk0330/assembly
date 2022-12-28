@@ -45,6 +45,14 @@
     </com.cmk.call.view.DragViewLayout>
 
     <ImageView
+        android:id="@+id/iv_full_screen"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        android:src="@drawable/ic_fullscreen" />
+
+    <ImageView
         android:id="@+id/iv_switch_audio"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
