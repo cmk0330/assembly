@@ -27,6 +27,7 @@ import kotlin.collections.set
 
 
 class CallingVideoActivity : BaseCallActivity() {
+    //https://toutiao.io/posts/t6jiaw/preview
     private val TAG = "CallingVideoActivity"
     private val binding by lazy { ActivityP2pVideoBinding.inflate(layoutInflater) }
     private val bindingCalling by lazy { LayoutCallingVideoBinding.inflate(layoutInflater) }
