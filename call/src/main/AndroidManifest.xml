@@ -15,6 +15,8 @@
 
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.READ_LOGS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.SYSTEM_OVERLAY_WINDOW" />
 
     <application
         android:name=".App"
@@ -40,12 +42,16 @@
         </activity>
         <activity
             android:name=".ui.CallingVideoActivity"
-            android:hardwareAccelerated="true" />
+            android:hardwareAccelerated="true"
+            android:launchMode="singleInstance" />
         <activity
             android:name=".ui.AnswerVideoActivity"
-            android:hardwareAccelerated="true"/>
+            android:hardwareAccelerated="true"
+            android:launchMode="singleInstance" />
         <activity android:name=".BaseCallActivity" />
-        <activity android:name=".ui.MeetingCallingVideoActivity"/>
+        <activity android:name=".ui.MeetingCallingVideoActivity" />
+
+        <service android:name=".service.FloatVideoWindowService" />
     </application>
 
 </manifest>

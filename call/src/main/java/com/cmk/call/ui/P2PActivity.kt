@@ -1,12 +1,17 @@
 package com.cmk.call.ui
 
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.os.Bundle
+import android.os.IBinder
 import androidx.lifecycle.lifecycleScope
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
 import com.cmk.call.entity.IntentData
 import com.cmk.call.databinding.ActivityP2pBinding
+import com.cmk.call.service.FloatVideoWindowService
 import com.cmk.common.ext.loge
 import com.cmk.common.ext.toast
 import com.permissionx.guolindev.PermissionX
@@ -21,10 +26,10 @@ class P2PActivity : BaseCallActivity() {
     private val binding by lazy { ActivityP2pBinding.inflate(layoutInflater) }
 
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IAC/AWeX05acGnJZkCtb0IJPBjT9BZ4fBBZ186CGO/gZb6Pg45sAAAAAIgDWRPbPC/+sYwQAAQAL/6xjAgAL/6xjAwAL/6xjBAAL/6xj"
+        "006aaa58676e73f41a086237149d9da6bc4IACcUcKsQCFmaiBjzP/qi8c9WpWh50h7SlKAmI55pTWzP6Pg45sAAAAAEAD1+c6F0JiuYwEA6APQmK5j"
     private val userId = "1234"
     private val token1 =
-        "006aaa58676e73f41a086237149d9da6bc4IAAlkEPCvuO0nmX1lK3kxtg4PNzBhkmokON+usCPURDu2gdWUn4AAAAAIgCTCcvYJf+sYwQAAQAl/6xjAgAl/6xjAwAl/6xjBAAl/6xj"
+        "006aaa58676e73f41a086237149d9da6bc4IAA6fMC3zSp82r5zLbFKAhEzgO0VYtHJJYqBBslnT1lpcwdWUn4AAAAAEADRtmedt5iuYwEA6AO3mK5j"
     private val userId1 = "5678"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +48,10 @@ class P2PActivity : BaseCallActivity() {
             }
 
         binding.btnMeeting.setOnClickListener {
-            startActivity(Intent(this, MeetingCallingVideoActivity::class.java))
+            moveTaskToBack(true)
+            val intent = Intent(this, FloatVideoWindowService::class.java) //开启服务显示悬浮框
+            bindService(intent, mVideoServiceConnection, Context.BIND_AUTO_CREATE)
+//            startActivity(Intent(this, MeetingCallingVideoActivity::class.java))
         }
 
         binding.btnLogin.setOnClickListener {
@@ -121,6 +129,19 @@ class P2PActivity : BaseCallActivity() {
                     })
                 }
             }
+        }
+    }
+
+
+    private var mVideoServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            // 获取服务的操作对象
+            val binder = service as FloatVideoWindowService.MyBinder
+            binder.service
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+
         }
     }
 }

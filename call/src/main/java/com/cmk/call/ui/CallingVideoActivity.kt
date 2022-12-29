@@ -1,19 +1,25 @@
 package com.cmk.call.ui
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.PixelFormat
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.IBinder
 import android.view.*
 import androidx.activity.viewModels
 import androidx.lifecycle.observe
 import com.bumptech.glide.Glide
 import com.cmk.call.BaseCallActivity
 import com.cmk.call.Constant
-import com.cmk.call.entity.IntentData
 import com.cmk.call.R
 import com.cmk.call.databinding.*
+import com.cmk.call.entity.IntentData
+import com.cmk.call.service.FloatVideoWindowService
 import com.cmk.call.ui.adapter.LocalInvitationAdapter
+import com.cmk.call.util.isServiceWork
 import com.cmk.call.viewmodel.RtcViewModel
 import com.cmk.common.ext.loge
 import com.drake.net.time.Interval
@@ -43,13 +49,10 @@ class CallingVideoActivity : BaseCallActivity() {
     private var callMode = 0 // 呼叫模式：0 视频 1 语音
     private var isGroupCall: Boolean? = false
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IAC/AWeX05acGnJZkCtb0IJPBjT9BZ4fBBZ186CGO/gZb6Pg45sAAAAAIgDWRPbPC/+sYwQAAQAL/6xjAgAL/6xjAwAL/6xjBAAL/6xj"
+        "006aaa58676e73f41a086237149d9da6bc4IACcUcKsQCFmaiBjzP/qi8c9WpWh50h7SlKAmI55pTWzP6Pg45sAAAAAEAD1+c6F0JiuYwEA6APQmK5j"
     private val videoMap = mutableMapOf<String, SurfaceView>()
     private val KEY_LOCAL = "local_key"
     private val KEY_REMOTE = "remote_key"
-    private var isSmall = false // 是否为缩小状态
-    private var lastTx = 0f
-    private var lastTy = 0f
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -212,49 +215,16 @@ class CallingVideoActivity : BaseCallActivity() {
 //                }
             }
             ivFullScreen.setOnClickListener {
-                if (isSmall) {
-                    val lp = window.attributes
-                    lp.x = 0
-                    lp.y = 0
-                    window.attributes = lp
-                    window.setLayout(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    isSmall = false
-                } else {
-                    flMinScreenVideo.visibility = View.GONE
-                    toSmall()
+                moveTaskToBack(true)
+                if (!isServiceWork(FloatVideoWindowService::class.java.canonicalName)) {
+                    val intent = Intent(
+                        this@CallingVideoActivity,
+                        FloatVideoWindowService::class.java
+                    ) //开启服务显示悬浮框
+                    bindService(intent, floatServiceConnection, BIND_AUTO_CREATE)
                 }
             }
-            ivSwitchMic.setOnTouchListener { v, event ->
-                when (event.getAction()) {
-                    MotionEvent.ACTION_DOWN -> {
-                        lastTx = event.getRawX()
-                        lastTy = event.getRawY()
-                        return@setOnTouchListener true
-                    }
-                    MotionEvent.ACTION_MOVE -> {
-                        val dx: Float = event.getRawX() - lastTx
-                        val dy: Float = event.getRawY() - lastTy
-                        lastTx = event.getRawX()
-                        lastTy = event.getRawY()
-                        if (isSmall) {
-                            val lp = window.attributes
-                            lp.x += dx.toInt()
-                            lp.y += dy.toInt()
-                            window.attributes = lp
-                        }
-                    }
-                    MotionEvent.ACTION_UP -> {
-                        return@setOnTouchListener true
-                    }
-                    MotionEvent.ACTION_CANCEL -> {
-                        return@setOnTouchListener true
-                    }
-                }
-                false
-            }
+
 //            flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
         }
         stopRing()
@@ -335,7 +305,7 @@ class CallingVideoActivity : BaseCallActivity() {
                 Constants.REMOTE_VIDEO_STATE_PLAYING -> { // 远端视频流正常解码播放
 
                 }
-                Constants.REMOTE_VIDEO_STATE_FROZEN -> { // 远端视频流卡顿
+                Constants.REMOTE_VIDEO_STATE_FROZEN -> { // 远端视频流卡顿 TODO 切换前后镜头也会触发
                     toast("对方网络环境较差")
                 }
                 Constants.REMOTE_VIDEO_STATE_FAILED -> { // 远端视频流播放失败
@@ -425,19 +395,36 @@ class CallingVideoActivity : BaseCallActivity() {
 //        surfaceView.setZOrderMediaOverlay(true)
     }
 
-    private fun toSmall() {
-        isSmall = true
-        val m = windowManager
-        val d: Display = m.defaultDisplay
-        val p = window.attributes
-        p.height = (d.height * 0.6).toInt()
-        p.width = (d.width * 0.6).toInt()
-        p.dimAmount = 0.0f
-        window.attributes = p
+    /**
+     * 从最小化状态恢复
+     */
+    override fun onRestart() {
+        super.onRestart()
+        if (isServiceWork(FloatVideoWindowService::class.java.canonicalName)) {
+            unbindService(floatServiceConnection)
+        }
+        bindingVideo.flMinScreenVideo.addView(videoMap[bindingVideo.flMinScreenVideo.tag])
+        bindingVideo.flFullScreenVideo.addView(videoMap[bindingVideo.flFullScreenVideo.tag])
     }
 
+    private var floatServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            // 获取服务的操作对象
+            val binder = service as FloatVideoWindowService.MyBinder
+            binder.service.initSurfaceView(videoMap[bindingVideo.flFullScreenVideo.tag])
+            bindingVideo.apply {
+                flFullScreenVideo.removeAllViews()
+                flMinScreenVideo.removeAllViews()
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
+        unbindService(floatServiceConnection)
     }
 }

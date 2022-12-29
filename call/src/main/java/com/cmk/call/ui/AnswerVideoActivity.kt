@@ -1,8 +1,12 @@
 package com.cmk.call.ui
 
+import android.content.ComponentName
+import android.content.Intent
+import android.content.ServiceConnection
 import android.graphics.PixelFormat
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.IBinder
 import android.view.SurfaceView
 import android.view.View
 import androidx.activity.viewModels
@@ -15,12 +19,13 @@ import com.cmk.call.databinding.ActivityP2pVideoBinding
 import com.cmk.call.databinding.LayoutAnswerVideoBinding
 import com.cmk.call.databinding.LayoutAudioBinding
 import com.cmk.call.databinding.LayoutVideoBinding
+import com.cmk.call.service.FloatVideoWindowService
 import com.cmk.call.ui.adapter.RemoteInvitationAdapter
+import com.cmk.call.util.isServiceWork
 import com.cmk.call.viewmodel.RtcViewModel
 import com.cmk.common.ext.loge
 import com.cmk.common.ext.toast
 import com.drake.net.time.Interval
-import com.drake.net.utils.TipUtils
 import io.agora.rtc2.Constants
 import io.agora.rtm.RemoteInvitation
 import io.agora.rtm.RtmMessage
@@ -186,6 +191,16 @@ class AnswerVideoActivity : BaseCallActivity() {
             ivSwitchCamera.setOnClickListener { rtcViewModel.switchCamera() }
             flMinScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
             flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
+            ivFullScreen.setOnClickListener {
+                moveTaskToBack(true)
+                if (!isServiceWork(FloatVideoWindowService::class.java.canonicalName)) {
+                    val intent = Intent(
+                        this@AnswerVideoActivity,
+                        FloatVideoWindowService::class.java
+                    ) //开启服务显示悬浮框
+                    bindService(intent, floatServiceConnection, BIND_AUTO_CREATE)
+                }
+            }
         }
         stopRing()
     }
@@ -259,8 +274,8 @@ class AnswerVideoActivity : BaseCallActivity() {
                 Constants.REMOTE_VIDEO_STATE_PLAYING -> { // 远端视频流正常解码播放
 
                 }
-                Constants.REMOTE_VIDEO_STATE_FROZEN -> { // 远端视频流卡顿
-                    TipUtils.toast("对方网络环境较差")
+                Constants.REMOTE_VIDEO_STATE_FROZEN -> { // 远端视频流卡顿 TODO 切换前后镜头也会触发
+                    toast("对方网络环境较差")
                 }
                 Constants.REMOTE_VIDEO_STATE_FAILED -> { // 远端视频流播放失败
 
@@ -351,5 +366,38 @@ class AnswerVideoActivity : BaseCallActivity() {
         holder.setFormat(PixelFormat.TRANSPARENT)
         surfaceView.setZOrderOnTop(isOnTop)
 //        surfaceView.setZOrderMediaOverlay(true)
+    }
+
+    /**
+     * 从最小化状态恢复
+     */
+    override fun onRestart() {
+        super.onRestart()
+        if (isServiceWork(FloatVideoWindowService::class.java.canonicalName)) {
+            unbindService(floatServiceConnection)
+        }
+        bindingVideo.flMinScreenVideo.addView(videoMap[bindingVideo.flMinScreenVideo.tag])
+        bindingVideo.flFullScreenVideo.addView(videoMap[bindingVideo.flFullScreenVideo.tag])
+    }
+
+    private var floatServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            // 获取服务的操作对象
+            val binder = service as FloatVideoWindowService.MyBinder
+            binder.service.initSurfaceView(videoMap[bindingVideo.flFullScreenVideo.tag])
+            bindingVideo.apply {
+                flFullScreenVideo.removeAllViews()
+                flMinScreenVideo.removeAllViews()
+            }
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unbindService(floatServiceConnection)
     }
 }
