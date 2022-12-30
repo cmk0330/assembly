@@ -26,10 +26,10 @@ class P2PActivity : BaseCallActivity() {
     private val binding by lazy { ActivityP2pBinding.inflate(layoutInflater) }
 
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IACcUcKsQCFmaiBjzP/qi8c9WpWh50h7SlKAmI55pTWzP6Pg45sAAAAAEAD1+c6F0JiuYwEA6APQmK5j"
+        "006aaa58676e73f41a086237149d9da6bc4IADflZgmQNczBHNRpV7gYdHxpch6LiCIfvQQy/ooZUX3FKPg45sAAAAAEABDNkVI5Y2vYwEA6APlja9j"
     private val userId = "1234"
     private val token1 =
-        "006aaa58676e73f41a086237149d9da6bc4IAA6fMC3zSp82r5zLbFKAhEzgO0VYtHJJYqBBslnT1lpcwdWUn4AAAAAEADRtmedt5iuYwEA6AO3mK5j"
+        "006aaa58676e73f41a086237149d9da6bc4IACFWv/5EcMUpkSvCj2OKe6eHVTZeawluhXqXwV7ZGjIugdWUn4AAAAAEABxMZy5mY+vYwEA6AOZj69j"
     private val userId1 = "5678"
 
     override fun onCreate(savedInstanceState: Bundle?) {

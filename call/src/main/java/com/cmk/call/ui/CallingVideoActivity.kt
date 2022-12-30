@@ -49,7 +49,7 @@ class CallingVideoActivity : BaseCallActivity() {
     private var callMode = 0 // 呼叫模式：0 视频 1 语音
     private var isGroupCall: Boolean? = false
     private val token =
-        "006aaa58676e73f41a086237149d9da6bc4IACcUcKsQCFmaiBjzP/qi8c9WpWh50h7SlKAmI55pTWzP6Pg45sAAAAAEAD1+c6F0JiuYwEA6APQmK5j"
+        "006aaa58676e73f41a086237149d9da6bc4IADflZgmQNczBHNRpV7gYdHxpch6LiCIfvQQy/ooZUX3FKPg45sAAAAAEABDNkVI5Y2vYwEA6APlja9j"
     private val videoMap = mutableMapOf<String, SurfaceView>()
     private val KEY_LOCAL = "local_key"
     private val KEY_REMOTE = "remote_key"
@@ -91,12 +91,12 @@ class CallingVideoActivity : BaseCallActivity() {
      */
     private fun initReceiveLayout() {
         binding.root.addView(bindingCalling.root, 0)
-        val intentData = intent?.getParcelableExtra<IntentData>("intent_data")
         bindingCalling.apply {
+            val json = JSONObject(callViewModel.currentLocalInvitation?.content)
             Glide.with(this@CallingVideoActivity)
-                .load(intentData?.callerAvatar)
+                .load(json.getString("CalleeAvatar"))
                 .into(sivCalleeAvatar)
-            tvUserName.text = intentData?.callerName
+            tvUserName.text = json.getString("CalleeName")
             ivCallingCancel.setOnClickListener {
                 callViewModel.cancelLocalInvitation()
             }
@@ -119,7 +119,17 @@ class CallingVideoActivity : BaseCallActivity() {
                     .load(getString("CalleeAvatar"))
                     .into(sivCalleeAvatar)
             }
-            ivCallingCancel.setOnClickListener { leave(true) }
+            ivHangUp.setOnClickListener { leave(true) }
+            ivFullScreen.setOnClickListener {
+                moveTaskToBack(true)
+                if (!isServiceWork(FloatVideoWindowService::class.java.canonicalName)) {
+                    val intent = Intent(
+                        this@CallingVideoActivity,
+                        FloatVideoWindowService::class.java
+                    ) //开启服务显示悬浮框
+                    bindService(intent, floatServiceConnection, BIND_AUTO_CREATE)
+                }
+            }
         }
     }
 
@@ -199,20 +209,15 @@ class CallingVideoActivity : BaseCallActivity() {
         )
         bindingVideo.apply {
             ivHangUp.setOnClickListener { leave(true) }
-            ivSwitchCamera.setOnClickListener { rtcViewModel.switchCamera() }
             flMinScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
-            ivSwitchAudio.setOnClickListener {
-                switchAudio()
-//                callViewModel.sendMessage(
-//                    userId = callViewModel.currentLocalInvitation?.calleeId.toString(),
-//                    msg = JSONObject().apply {
-//                        put(Constant.MESSAGE_TYPE, Constant.SWITCH_AUDIO)
-//                    }.toString()
-//                ) {
-//                    if (it) {
-//                        switchAudio()
-//                    }
-//                }
+            ivSwitchAudio.setOnClickListener { switchAudio() }
+            ivSwitchCamera.setOnClickListener {
+                ivSwitchCamera.isSelected = !ivSwitchCamera.isSelected
+                rtcViewModel.switchCamera()
+            }
+            ivSwitchMic.setOnClickListener {
+                ivSwitchMic.isSelected = !ivSwitchMic.isSelected
+                rtcViewModel.muteLocalAudioStream(!ivSwitchAudio.isSelected)
             }
             ivFullScreen.setOnClickListener {
                 moveTaskToBack(true)
@@ -425,6 +430,5 @@ class CallingVideoActivity : BaseCallActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unbindService(floatServiceConnection)
     }
 }

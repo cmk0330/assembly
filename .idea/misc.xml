@@ -9,17 +9,22 @@
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_mic.xml" value="0.2465" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_mic_off.xml" value="0.2465" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_switch_camera.xml" value="0.2465" />
+        <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_switch_camera_off.xml" value="0.2475" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_video.xml" value="0.2465" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_video_off.xml" value="0.2465" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_volume_2.xml" value="0.2465" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/ic_volume_x.xml" value="0.2465" />
+        <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/select_camera.xml" value="0.2475" />
+        <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/select_mic.xml" value="0.2475" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/drawable/selector_camera.xml" value="0.2465" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/activity_meeting_calling_video.xml" value="0.3494791666666667" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/activity_meeting_video.xml" value="0.3484375" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/activity_p2p.xml" value="0.3494791666666667" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/activity_p2p_video.xml" value="0.3494791666666667" />
+        <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/adapter_remote_invitation.xml" value="0.3494791666666667" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/adapter_scale.xml" value="0.3494791666666667" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/layout_answer_video.xml" value="0.3494791666666667" />
+        <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/layout_audio.xml" value="0.3494791666666667" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/layout_call_float_video.xml" value="0.3494791666666667" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/layout_calling_video.xml" value="0.3494791666666667" />
         <entry key="..\:/mineSpace/assembly/call/src/main/res/layout/layout_video.xml" value="0.3494791666666667" />

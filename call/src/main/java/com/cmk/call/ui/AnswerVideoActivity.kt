@@ -66,8 +66,8 @@ class AnswerVideoActivity : BaseCallActivity() {
         binding.root.addView(bindingAnswer.root, 0)
         bindingAnswer.apply {
             tvCallState.text = "对方等待接听中"
-            bindingAnswer.recyclerView.adapter = remoteAdapter
-            remoteAdapter.submitList(callViewModel.remoteInvitationList.toMutableList())
+//            bindingAnswer.recyclerView.adapter = remoteAdapter
+//            remoteAdapter.submitList(callViewModel.remoteInvitationList.toMutableList())
             if (callViewModel.remoteInvitationList.isEmpty()) {
                 return
             }
@@ -82,14 +82,20 @@ class AnswerVideoActivity : BaseCallActivity() {
                     rtcViewModel.initRtc(this@AnswerVideoActivity, callMode)
                 }
             }
-            remoteAdapter.setOnAcceptListener {
-                callViewModel.acceptRemoteInvitation(it)
+            ivReceiveAccept.setOnClickListener {
+                callViewModel.acceptRemoteInvitation(callViewModel.remoteInvitationList.first())
             }
-            remoteAdapter.setOnRefuseListener {
-                callViewModel.refuseRemoteInvitation(it)
+            ivReceiveRefuse.setOnClickListener {
+                callViewModel.refuseRemoteInvitation(callViewModel.remoteInvitationList.first())
                 stopRing()
                 finish()
             }
+//            remoteAdapter.setOnAcceptListener {
+//                callViewModel.acceptRemoteInvitation(it)
+//            }
+//            remoteAdapter.setOnRefuseListener {
+//                callViewModel.refuseRemoteInvitation(it)
+//            }
         }
         startRing()
     }
@@ -108,7 +114,7 @@ class AnswerVideoActivity : BaseCallActivity() {
                     .load(getString("CallerAvatar"))
                     .into(sivCalleeAvatar)
             }
-            ivCallingCancel.setOnClickListener { leave(true) }
+            ivHangUp.setOnClickListener { leave(true) }
         }
     }
 
@@ -188,9 +194,16 @@ class AnswerVideoActivity : BaseCallActivity() {
         )
         bindingVideo.apply {
             ivHangUp.setOnClickListener { leave(true) }
-            ivSwitchCamera.setOnClickListener { rtcViewModel.switchCamera() }
             flMinScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
             flFullScreenVideo.setOnClickListener { switchLocalRemoteVideo() }
+            ivSwitchCamera.setOnClickListener {
+                ivSwitchCamera.isSelected = !ivSwitchCamera.isSelected
+                rtcViewModel.switchCamera()
+            }
+            ivSwitchMic.setOnClickListener {
+                ivSwitchMic.isSelected = !ivSwitchMic.isSelected
+                rtcViewModel.muteLocalAudioStream(!ivSwitchAudio.isSelected)
+            }
             ivFullScreen.setOnClickListener {
                 moveTaskToBack(true)
                 if (!isServiceWork(FloatVideoWindowService::class.java.canonicalName)) {
@@ -398,6 +411,5 @@ class AnswerVideoActivity : BaseCallActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        unbindService(floatServiceConnection)
     }
 }

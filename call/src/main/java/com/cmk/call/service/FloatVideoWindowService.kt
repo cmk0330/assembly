@@ -12,8 +12,8 @@ import android.view.*
 import android.widget.FrameLayout
 import com.cmk.call.R
 import com.cmk.call.ui.CallingVideoActivity
-import com.cmk.call.ui.P2PActivity
 import com.cmk.common.ext.dp2px
+import com.cmk.common.ext.loge
 import com.cmk.core.BaseApp
 import kotlin.math.abs
 
@@ -81,7 +81,7 @@ class FloatVideoWindowService : Service() {
         smallPreviewLayout.setOnTouchListener(floatingListener)
     }
 
-    val params: WindowManager.LayoutParams
+    private val params: WindowManager.LayoutParams
         get() {
             val params = WindowManager.LayoutParams()
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -89,11 +89,12 @@ class FloatVideoWindowService : Service() {
             } else {
                 params.type = WindowManager.LayoutParams.TYPE_PHONE
             }
-            params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR or
-                    WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
+            params.flags =
+                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                        WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR or
+                        WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH
             params.width = WindowManager.LayoutParams.WRAP_CONTENT
             params.height = WindowManager.LayoutParams.WRAP_CONTENT
             return params

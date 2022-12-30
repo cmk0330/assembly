@@ -123,6 +123,13 @@ class RtcViewModel : ViewModel() {
     }
 
     /**
+     * 关闭/开启音频
+     */
+    fun disableAudio(enabled: Boolean) {
+        rtcEngine?.enableLocalAudio(enabled)
+    }
+
+    /**
      * 切换摄像头
      */
     fun switchCamera() {

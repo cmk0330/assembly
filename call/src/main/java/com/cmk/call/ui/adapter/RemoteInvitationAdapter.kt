@@ -25,13 +25,13 @@ class RemoteInvitationAdapter : RecyclerView.Adapter<RemoteInvitationAdapter.Rem
     }
 
     override fun onBindViewHolder(holder: RemoteInvitationVH, position: Int) {
-        val item = dataList.get(position)
-        JSONObject(item.content).apply {
-            holder.tvCallerName.text = getString("CallerName")
-            Glide.with(holder.ivCallerAvatar)
-                .load(getString("CallerAvatar"))
-                .into(holder.ivCallerAvatar)
-        }
+//        val item = dataList[position]
+//        JSONObject(item.content).apply {
+//            holder.tvCallerName.text = getString("CallerName")
+//            Glide.with(holder.ivCallerAvatar)
+//                .load(getString("CallerAvatar"))
+//                .into(holder.ivCallerAvatar)
+//        }
         holder.ivAccept.setOnClickListener {
             onAcceptListener?.invoke(dataList[position])
         }
@@ -61,7 +61,7 @@ class RemoteInvitationAdapter : RecyclerView.Adapter<RemoteInvitationAdapter.Rem
     class RemoteInvitationVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val ivAccept: ImageView = itemView.findViewById(R.id.iv_receive_accept)
         val ivRefuse: ImageView = itemView.findViewById(R.id.iv_receive_refuse)
-        val tvCallerName = itemView.findViewById<TextView>(R.id.tv_caller_user)
-        val ivCallerAvatar = itemView.findViewById<ShapeableImageView>(R.id.iv_caller_avatar)
+//        val tvCallerName = itemView.findViewById<TextView>(R.id.tv_caller_user)
+//        val ivCallerAvatar = itemView.findViewById<ShapeableImageView>(R.id.iv_caller_avatar)
     }
 }
